@@ -1,0 +1,9 @@
+void compute_selfgravity ();
+void init_sg ();
+void compute_fftdensity ();
+void compute_fftkernel ();
+void compute_sgacc ();
+void update_sgvelocity ();
+void init_planetarysys_withSG ();
+void compute_SGZeroMode ();
+void compute_anisotropic_pressurecoeff ();

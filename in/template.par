@@ -1,0 +1,119 @@
+##################
+### Gas parameters
+##################                
+Sigma0          1e-4     # initial disc surface density at R=1 (code's unit of length)
+SigmaSlope      0.5      # minus the power-law radius exponent of initial disc surface density (Sigma_0 ~ R^-SigmaSlope)
+AspectRatio     0.05	 # initial disc aspect ratio (H/R) at R=1
+FlaringIndex    0.25     # power-law radius exponent of initial disc aspect ratio (H/R ~ R^FlaringIndex)
+AlphaViscosity	1e-3     # uniform disc alpha viscosity
+
+SelfGravity     No       # do we include disc self-gravity? (Yes, Z or No)
+SgThicknessSmoothing 0.3 # ratio between self-gravitating softening length and pressure scale height
+AddNoise	No       # do we add initial random perturbations to gas surface density?
+
+EnergyEquation  No	 # do we include an energy equation?
+AdiabaticIndex  1.6667   # ratio of specific heats (gamma)
+
+PhotoEvaporation  No    # Disc photo-evaporation due to X-rays?
+
+FactorUnitLength 10.0	 # code's unit of length in AU
+FactorUnitMass	 1.0	 # code's unit of mass in Solar masses
+
+
+###################
+### Dust Parameters
+###################
+## ----------------
+## General dust properties
+## ----------------
+Rhopart	 	 1.3     # particles internal density in g/cm(-3)
+DustFeelDisk     Yes     # do particles feel gas drag?
+DustFeelSG	 No	 # do particles feel the disc's self-gravitational potential? (Yes, Z or No)
+DustFeelPlanets	 Yes	 # do particles feel the planets? 
+SFTApprox	 No	 # use Short-Friction Time Approximation if stopping time shorter than timestep?
+RestartWithNewDust  No   # do we introduce new dust particles at a restart?
+RMinDust	 0.8	 # inner radius where particles are introduced
+RMaxDust	 1.2	 # outer radius where particles are introduced
+
+## ----------------
+## Lagrangian particles?
+## ----------------
+NbPart		 50000	 # number of dust particles
+DustSlope	 -0.5    # minus the power-law radius exponent of the initial dust number distribution
+		 	 # (should be equal to sigmaslope-1 for a uniform dust-to-gas surface density ratio)
+SizeMinPart	 1e-5    # Minimum size of particles in meters
+SizeMaxPart	 1e-2	 # Maximum size of particles in meters
+SizePartSlope	 1.0	 # minus the power-law radius exponent of the particles size distribution
+		 	 # (SizePartSlope should be 1.0 for an ~equal number of particles per decade of sizes)
+DustFeelTurb	 Yes	 # do particles feel stochastic turbulence?
+WriteDustSystem	 Yes	 # output particles coordinates? (dustsystatX.dat files)
+WriteDustDensity No      # write dust particles' surface density? (2D polar field: dustX.dat files)
+RemoveDustFromPlanetsHillRadius	No  #remove dust particles inside the Hill radius of all planets?
+Interpolation	 C	 # can be TSC (triangular-shaped cloud, default), CIC (cloud-in-cell) or NGP (nearest-grid point)
+DustFeedback	 No	 # include dust feedback onto the gas? (!beta version: only works for a single-sized dust distribution!)
+DustToGasMassRatio 1e-2  # initial dust-to-gas mass ratio (matters only for dust feedback)
+
+## ----------------
+## dust treated as a pressureless/low-pressure fluid?
+## ----------------
+DustFluid	No	     # include a dust fluid?
+DustDiffusion	Yes	     # include dust diffusion in dust continuity equation?
+DustToGasDensityRatio  1e-2  # initial (uniform) dust-to-gas surface density ratio
+DSigma0		   1e-6	     # initial dust surface density at R=1 (only if RestartWithNewDust=Yes)
+DSigmaSlope        0.5       # minus the power-law radius exponent of initial dust surface density (only if RestartWithNewDust=Yes)
+DAspectRatio       0.0       # dust aspect ratio (H/R) at R=1 (should be 0.0 for a pressureless fluid)
+DFlaringIndex      0.0       # power-law radius exponent of initial dust aspect ratio
+DAlphaViscosity    0.0       # dust alpha viscosity (better use dust diffusion above and let it to 0)
+Sizepart	   1e-3      # dust size in meters
+InnerBoundaryDust  O         # boundary condition for dust fluid (other options are possible, but better use O for Open...)
+
+
+##################
+### Star and planet parameters
+##################
+PlanetConfig    in/template.cfg	# file contains planet parameters
+ForcedCircular  No		# do we keep planets on fixed circular orbits?
+Eccentricity	0.0     	# this is where you will change the planet's (fixed) eccentricity
+ThicknessSmoothing 0.6		# planet potential softening length to pressure scale height ratio
+Transport       FARGO		# FARGO handling of CFL timestep (otherwise set to STANDARD)
+MassTaper	5.0		# timescale (in orbits at R=1) over which the masses of the planets are increased
+
+
+##################
+### Grid parameters
+##################
+Disk            Yes	# do we include the disc?
+Rmin            0.4	# grid's inner edge
+Rmax            2.2	# grid's outer edge
+RadialSpacing   A  	# A for arithmetic radial spacing or L for logarithmic radial spacing (required with gas SG)
+Nrad            200	# number of grid cells along radial direction
+Nsec            400	# number of grid cells along azimuthal direction
+
+
+##################
+### Numerical parameters (incl. boundary conditions for the gas)
+##################
+OmegaFrame      0.0	# frame's angular frequency
+Frame           C	# type C for a frame corotating with a planet, F for a frame fixed on the primary
+IndirectTerm    Yes	# do we include the indirect accelerations? Note the plural: due to planet and disc gas
+DiscardGasIndrectTerm	No   # do we discard the indirect term due to the gas?
+InnerBoundary   E	# boundary condition at inner and outer edges (Open,KNOpen,Non-Reflecting,Evanescent,Accreting,Rigid)
+DampToAxi	No	# evanescent boundary (E): damping toward axisymmetric instantaneous fields? (default: initial fields)
+DampToViscous	No	# new damping procedure: damping towards viscously evolving 1D profiles?
+WKZRmin		0.52	# outer edge of inner damping region for "evanescent" boundary (E)
+WKZRmax		1.8	# inner edge of outer damping region for "evanescent" boundary (E)
+Nrad1D		1000	# number of grid cells of 1D grid where 1D viscous evolution is calculated
+Rmin1D		0.04	# inner edge of 1D grid
+Rmax1D		20.0	# outer edge of 1D grid
+AddFloors	No	# to avoid gas or dust fluid density and thermal energy to reach too small values
+DensityFloor	1e-9	# value of surface density floor in code units
+
+
+##################			
+### Outputs control parameters
+##################
+ReadPlanetFileAtRestart	No	# to restart a run with a pre-evolved planet 
+Ntot		 400		# NtotxDT/2Pi sets the total number of orbits (at R=1)
+Ninterm          20		# Ninterm*DT/2pi sets the time in orbits between outputs
+DT		 0.314159265358	# DT
+OutputDir        out1		# Name of outputs directory (local)
