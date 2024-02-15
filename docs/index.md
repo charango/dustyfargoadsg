@@ -1,0 +1,16 @@
+# Dusty FARGO-ADSG: a quick user manual<br>- Clément Baruteau -
+
+## What is Dusty FARGO-ADSG ?
+
+Dusty FARGO-ADSG is an extension of the original 2D grid-based hydrodynamical code FARGO. It models the evolution of the gas and dust of a protoplanetary disc with embedded planets, optional energy equation (AD, originally standing for ’adiabatic’) and optional gas self-gravity (SG). Dust can be treated either as Lagrangian particles with a power-law size distribution and/or as a zero/low-pressure fluid with fixed size. We first describe below the new features of Dusty FARGO-ADSG regarding the evolution of the disc gas. We then detail the Lagrangian particles and low-pressure fluid implementations of the disc dust. This quick tour ends up with a short section dedicated to installation, compilation and execution of the code.
+
+## New features about the disc gas
+
+Compared to the previous public[^1] version of FARGO-ADSG, which dates back from 2007, Dusty FARGO-ADSG features a number of improvements for the gas part, in particular by the inclusion of several possible source terms in the energy equation ($\beta$-cooling, thermal cooling with the Bell & Lin opacities, thermal, entropy or radiative diffusions, stellar irradiation...). A bug in the expression of the viscous heating has also been corrected. Disc photo-evaporation due to X-rays has been implemented (like in Rosotti et al. 2013, MNRAS, 430 ; [ADS link](https://ui.adsabs.harvard.edu/abs/2013MNRAS.430.1392R/abstract)). The simple disc turbulence model of Baruteau & Lin (2010), with the stochastic excitation of wave-like modes, is available. As for boundary conditions, it is now possible to use the so-called wave-killing zones near the grid’s inner and outer edges, for which the mass surface density and radial velocity of the gas are damped towards the radial profiles obtained by calculating the pure viscous evolution of the disc on a 1D grid simultaneously to the gas equations solved on the polar grid (the azimuthal velocity of the gas is damped towards its axisymmetric instantaneous profile). It is a very simplified way to model the viscous evolution of a global disc in the absence of planets, yet it can be useful for long-term simulations. Several parameter files can be found in the ”in” sub-directory which show how to active or use the aforementioned options.
+
+More details on how the disc gas is modelled in the code can be found in :
+
+* the first Fargo papers – Masset 2000 (A&A Supp., 141 ; [ADS](https://ui.adsabs.harvard.edu/abs/2000A%26AS..141..165M/abstract)) and Masset 2002 (A&A, 387 ; [ADS](https://ui.adsabs.harvard.edu/abs/2002A%26A...387..605M/abstract)) – for the general equations and the FARGO algorithm,
+* Baruteau & Masset 2008a (ApJ, 672 ; [ADS](https://ui.adsabs.harvard.edu/abs/2008ApJ...672.1054B/abstract)) for the gas energy equation, Baruteau & Masset 2008b (ApJ, 678 ; [ADS](https://ui.adsabs.harvard.edu/abs/2008ApJ...678..483B/abstract)) for the gas self-gravity solver, or in my [PhD thesis](http://clement.baruteau.free.fr/these/PhD_CB.pdf).
+
+[^1]: The website hosting the original FARGO code and its various branches, including FARGO-ADSG, is no longer available since Summer 2023.
