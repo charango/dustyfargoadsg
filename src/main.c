@@ -34,7 +34,7 @@ main(argc, argv)
   int          i,j,k;
   real         foostep = 0.;
   real         r, v;
-  real         Initial_Disc_Mass;
+  real         Initial_Disc_Dust_Mass;
   boolean      disable = NO, TimeInfo = NO, Profiling = NO;
   boolean      Stockholm = NO;
   TimeProcess  t_Hydro;
@@ -147,7 +147,7 @@ main(argc, argv)
   gas_v_theta        = CreatePolarGrid(NRAD, NSEC, "gasvtheta");
   gas_energy         = CreatePolarGrid(NRAD, NSEC, "gasenergy");
   gas_label          = CreatePolarGrid(NRAD, NSEC, "gaslabel");
-  dust_pc_density    = CreatePolarGrid(NRAD, NSEC, "dust");
+  dust_pc_density    = CreatePolarGrid(NRAD, NSEC, "pcdens");
   dust_density       = CreatePolarGrid(NRAD, NSEC, "dustdens");
   dust_v_rad         = CreatePolarGrid(NRAD, NSEC, "dustvrad");
   dust_v_theta       = CreatePolarGrid(NRAD, NSEC, "dustvtheta");
@@ -186,15 +186,18 @@ main(argc, argv)
   }
 
   /* Stores the mass of the super-particles for calculating the
-     dust-to-gas density ratio (only relevant with dust feedback) */
-  if ( (NBPART != 0) && (DustFeedback) ) {
+     dust-to-gas density ratio */
+  if (NBPART != 0) {
     if ( (Restart == NO) || ( (Restart == YES) && (RestartWithNewDust == YES) ) ) {
-      // initial surface density profile known by all CPUs
-      mpi_make1Dprofile (gas_density->Field, GLOBAL_bufarray);
-      Initial_Disc_Mass = 0.0;
-      for (i=0; i<GLOBALNRAD; i++)
-	Initial_Disc_Mass += (GLOBAL_bufarray[i]*0.5*(PMAX-PMIN)*(Radii[i+1]*Radii[i+1]-Radii[i]*Radii[i]));
-      Particles_Mass_Initial = DUSTTOGASMASSRATIO*Initial_Disc_Mass/NBPART;
+      // initial dust surface density profile known by all CPUs
+      mpi_make1Dprofile (dust_density->Field, GLOBAL_bufarray);
+      Initial_Disc_Dust_Mass = 0.0;
+      // below we compute the total dust disc mass between RMINDUST and RMAXDUST
+      for (i=0; i<GLOBALNRAD; i++) {
+	if ( (Radii[i] >= RMINDUST) && (Radii[i] <= RMAXDUST) )
+	  Initial_Disc_Dust_Mass += (GLOBAL_bufarray[i]*0.5*(PMAX-PMIN)*(Radii[i+1]*Radii[i+1]-Radii[i]*Radii[i]));
+      }
+      Particles_Mass_Initial = Initial_Disc_Dust_Mass/NBPART;
       Particles_Mass = Particles_Mass_Initial;
       // Keep track of disc's initial mass in a file for a restart run
       if (CPU_Master) {
@@ -208,15 +211,17 @@ main(argc, argv)
 	fclose (fich_idm);
       }
     } else {
-      // Case of a restart simulation with already evolved dust particles
-      sprintf (name_idm, "%s%s.dat", OUTPUTDIR, "particlesmass");
-      fich_idm = fopen(name_idm, "r");
-      if (fich_idm == NULL) {
-	fprintf (stderr, "Can't read 'particlesmass.dat' file. Aborting.\n");
-	prs_exit (1);
+      if (DustFeedback) {
+	// Case of a restart simulation with already evolved dust particles
+	sprintf (name_idm, "%s%s.dat", OUTPUTDIR, "particlesmass");
+	fich_idm = fopen(name_idm, "r");
+	if (fich_idm == NULL) {
+	  fprintf (stderr, "Can't read 'particlesmass.dat' file. Aborting.\n");
+	  prs_exit (1);
+	}
+	fscanf (fich_idm, "%lg",&Particles_Mass);
+	Particles_Mass_Initial = Particles_Mass;
       }
-      fscanf (fich_idm, "%lg",&Particles_Mass);
-      Particles_Mass_Initial = Particles_Mass;
     }
     masterprint ("Mass of the super-particles is %lg\n",Particles_Mass);
   }

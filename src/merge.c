@@ -90,7 +90,7 @@ void merge (nb)
       bool = Write_gtheta;
       break;
     case 16: 
-      strcpy (radix, "dust");
+      strcpy (radix, "pcdens");
       bool = Write_DustDensity*(NBPART == 0 ? 0 : 1);
       break;
     case 17: 
