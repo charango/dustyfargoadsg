@@ -512,9 +512,12 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       OmegaFrame = OmegaNew;
     }
     RotatePsys (sys, OmegaFrame*dt);
-    if (NBPART != 0)
+    if (NBPART != 0) {
       RotateDsys (dsys, OmegaFrame*dt);
-
+      /* CB 02/2024 needed to later damp gasdustX.dat files */
+      interpolation(dsys, Vrad, Vtheta, Rho, dustpcdens, dt);
+    }
+      
     /* Now we update gas fields */
     if (IsDisk == YES) {
       /* NEW (May 2016): evanescent boundary condition can now damp toward
