@@ -330,7 +330,7 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
   real OmegaNew, domega;
   int gastimestepcfl, i, k, j, NbPlanets;
   boolean Crashed=NO;
-  extern boolean ComputeCPDMass, NoTimestepConstraintByParticles, Evanescent;
+  extern boolean ComputeCPDMass, NoTimestepConstraintByParticles, Evanescent, Write_DustDensity;
   real DustTimeStep;
   DustTimeStep = DUSTTIMESTEP;
   FirstGasStepFLAG=1;
@@ -515,7 +515,8 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
     if (NBPART != 0) {
       RotateDsys (dsys, OmegaFrame*dt);
       /* CB 02/2024 needed to later damp pcdensX.dat files */
-      interpolation(dsys, Vrad, Vtheta, Rho, dustpcdens, dt);
+      if (Write_DustDensity == YES)
+	interpolation(dsys, Vrad, Vtheta, Rho, dustpcdens, dt);
     }
       
     /* Now we update gas fields */
