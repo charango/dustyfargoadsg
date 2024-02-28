@@ -18,6 +18,14 @@ OPTSEQ_TITAN =
 PARAOPT_TITAN = 
 PARACC_TITAN = mpicc
 
+# CALMIP regional cluster at University of Toulouse
+# Opteron platform FARGO_ARCH must be set to CALMIP
+CC_CALMIP = icc
+OPT_CALMIP = -O3 -m64 -Wno-unknown-pragmas -Wall
+OPTSEQ_CALMIP =
+PARAOPT_CALMIP = 
+PARACC_CALMIP = mpiicc
+
 # Macintosh MAC OS X platform (with gcc) FARGO_ARCH must be set to
 #MACOSX
 CC_MACOSX  = cc
