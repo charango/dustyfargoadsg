@@ -96,7 +96,7 @@ Nsec            400	# number of grid cells along azimuthal direction
 OmegaFrame      0.0	# frame's angular frequency
 Frame           C	# type C for a frame corotating with a planet, F for a frame fixed on the primary
 IndirectTerm    Yes	# do we include the indirect accelerations? Note the plural: due to planet and disc gas
-DiscardGasIndrectTerm	No   # do we discard the indirect term due to the gas?
+DiscardGasIndirectTerm	No   # do we discard the indirect term due to the gas?
 InnerBoundary   E	# boundary condition at inner and outer edges (Open,KNOpen,Non-Reflecting,Evanescent,Accreting,Rigid)
 DampToAxi	No	# evanescent boundary (E): damping toward axisymmetric instantaneous fields? (default: initial fields)
 DampToViscous	No	# new damping procedure: damping towards viscously evolving 1D profiles?
