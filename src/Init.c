@@ -96,10 +96,12 @@ void Initialization (gas_density, gas_v_rad, gas_v_theta, gas_energy, gas_label,
      PlanetarySystem *pla_sys;
      /* CB: NEED TO ADD INITIALIZATION OF DUST FLUID */
 {
-  extern boolean EnergyEquation, EntropyDiffusion, RadiativeDiffusion, ImplicitRadiativeDiffusion, ThermalCooling, DustFluid, RestartWithNewDust;
-  real *energ, *dens;
+  extern boolean EnergyEquation, EntropyDiffusion, RadiativeDiffusion, ImplicitRadiativeDiffusion, ThermalCooling, DustFluid, RestartWithNewDust, Corotating;
+  real *energ, *dens, *vtheta;
   FILE *output;
   char OutputName[256];
+  real axi[GLOBALNRAD];
+  real omegaFrame_at_restart;
   int i, j, l, nr, ns;
   energ = gas_energy->Field;
   nr = gas_energy->Nrad;
@@ -133,6 +135,23 @@ void Initialization (gas_density, gas_v_rad, gas_v_theta, gas_energy, gas_label,
     ReadfromFile (gas_density, "gasdens", NbRestart);
     ReadfromFile (gas_v_rad, "gasvrad", NbRestart);
     ReadfromFile (gas_v_theta, "gasvtheta", NbRestart);
+    /* ====================== */
+    /* CUIDADIN TEST MAR 2024 */
+    vtheta = gas_v_theta->Field;
+    omegaFrame_at_restart = GetfromPlanetFile(NbRestart, 9, 0); // otherwise OmegaFrame will be 0
+    //mpi_make1Dprofile (vtheta, axi);  // global array known by all CPUs
+    //if ( (vtheta[0] < 0.0) && (Corotating == NO) && (OMEGAFRAME == 0.0) ) {
+    masterprint("OmegaFrame at restart = %lg\n", omegaFrame_at_restart);
+    if ( (omegaFrame_at_restart > 0.0) && (Corotating == NO) ) {
+      masterprint("Previous run was carried out in a corotating frame as read value OmegaFrame = %lg, while at restart the run is done in a fixed frame centred on the star: I need to correct for the gas velocites at restart!\n",omegaFrame_at_restart);
+      for (i=0; i<nr; i++) {
+	for (j=0; j<ns; j++) {
+	  l = i*ns + j;
+	  vtheta[l] += Rmed[i]*omegaFrame_at_restart;
+	}
+      }
+    }
+    /* ====================== */
     if (EnergyEquation) {
       ReadfromFile (gas_energy, "Temperature", NbRestart);
       /* ! gas_energy accounts for the gas temperature... */
@@ -149,6 +168,22 @@ void Initialization (gas_density, gas_v_rad, gas_v_theta, gas_energy, gas_label,
       ReadfromFile (dust_density, "dustdens", NbRestart);
       ReadfromFile (dust_v_rad, "dustvrad", NbRestart);
       ReadfromFile (dust_v_theta, "dustvtheta", NbRestart);
+      /* ====================== */
+      /* CUIDADIN TEST MAR 2024 */
+      vtheta = dust_v_theta->Field;
+      //mpi_make1Dprofile (vtheta, axi);  // global array known by all CPUs
+      //if ( (vtheta[0] < 0.0) && (Corotating = NO) && (OMEGAFRAME == 0.0) ) {
+      if ( (omegaFrame_at_restart > 0.0) && (Corotating = NO) ) {
+	masterprint("Previous run was carried out in a corotating frame as read value OmegaFrame = %lg, while at restart the run is done in a fixed frame centred on the star: I need to correct for the dust velocites at restart!\n",omegaFrame_at_restart);
+	for (i=0; i<nr; i++) {
+	  for (j=0; j<ns; j++) {
+	    l = i*ns + j;
+	    vtheta[l] += Rmed[i]*omegaFrame_at_restart;
+	  }
+	}
+      }
+    /* ====================== */
+      
     }
     /* To output restart fields correctly */
     ComputeSoundSpeed (gas_density, gas_energy, pla_sys);
