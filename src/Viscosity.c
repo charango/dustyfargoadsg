@@ -38,13 +38,15 @@ real FViscosity (rad)
   scale = 1.0+(PhysicalTime-PhysicalTimeInitial)*LAMBDADOUBLING;
   rmin *= scale;
   rmax *= scale;
-  if (rad < rmin) viscosity *= 100.0;
-  //if (rad < rmin) viscosity *= CAVITYRATIO;
+  if (rad < rmin) viscosity *= CAVITYRATIO;
   if ((rad >= rmin) && (rad <= rmax)) {
-    //viscosity *= exp((rmax-rad)/(rmax-rmin)*log(CAVITYRATIO));
-    nuint = 100.0*VISCOSITY;
+    viscosity *= exp((rmax-rad)/(rmax-rmin)*log(CAVITYRATIO));
+    /*
+    # viscosity profile used in Debras+ 21
+    nuint = CAVITYRATIO*VISCOSITY;
     nuext = VISCOSITY;
     viscosity = nuint + (nuext-nuint)*log(rad/rmin)/log(rmax/rmin);
+    */
   }
   /* Linear time variation of viscosity over time duration
      RELEASEDATEVISCOSITY between VISCOSITY and RELEASEVISCOSITY */
