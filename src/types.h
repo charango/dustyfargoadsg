@@ -75,7 +75,7 @@ typedef struct polargrid PolarGrid;
 #define         COM_VRAD        1
 #define         COM_VTHETA      2
 
-#define		MAX1D	16384
+#define		MAX1D	32768
 
 struct param {
   char name[80];
