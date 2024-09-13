@@ -102,7 +102,7 @@ void merge (nb)
       bool = Write_AziFBAcc;
       break;
     case 19: 
-      strcpy (radix, "label");
+      strcpy (radix, "gaslabel");
       bool = YES;
       break;
     }
