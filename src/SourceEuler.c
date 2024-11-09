@@ -27,21 +27,26 @@ static PolarGrid *DTemperInt;
 static PolarGrid *DVradNew, *DVradInt;
 static PolarGrid *DVthetaNew, *DVthetaInt;
 static PolarGrid *EnergyNew, *EnergyInt, *TempInt;
-static real timeCRASH;  
+
 extern boolean Corotating;
 extern boolean EnergyEquation, EntropyDiffusion, RadiativeDiffusion, ImplicitRadiativeDiffusion, ThermalCooling, ViscousHeating;
 extern boolean SelfGravity, ZMPlus;
 extern boolean DustDiffusion;
-int FirstGasStepFLAG=1;
-static int AlreadyCrashed = 0, GasTimeStepsCFL;
 extern boolean FastTransport, IsDisk, AddFloors, DustFluid, DustFeedback, DustFeelDisk, DampToViscous, ShortFrictionTimeApproximation;
 extern boolean AddMass, DontApplySubKeplerian, DiscEvaporation, PhotoEvaporation, CavityTorque;
+
 Pair DiskOnPrimaryAcceleration;
+
+int FirstGasStepFLAG=1;
+static int AlreadyCrashed = 0, GasTimeStepsCFL;
 static int niterSOR;
-static real omegaSOR = 1.97;   // initial guess value for omega relaxation parameter in SOR solver
-static real epsilonSOR = 1e-4; // relatice accuracy required for SOR solver
 static int niterbuf = MAXITS;
 static int jchess1st, jchess2nd;
+
+static real timeCRASH;  
+static real omegaSOR = 1.97;   // initial guess value for omega relaxation parameter in SOR solver
+static real epsilonSOR = 1e-4; // relatice accuracy required for SOR solver
+
 
 boolean DetectCrash (array)
      PolarGrid *array;
@@ -357,17 +362,17 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       /* dtnbody is the n-body timestep */
       dtnbody = 1e5;
       for (k = 0; k < NbPlanets; k++) {
-	for (j = k+1; j < NbPlanets; j++) {
-	  xk = sys->x[k];
-	  xj = sys->x[j];
-	  yk = sys->y[k];
-	  yj = sys->y[j];
-	  mk = FinalPlanetMass[k];
-	  mj = FinalPlanetMass[j];
-	  dist = sqrt( (xk-xj)*(xk-xj) + (yk-yj)*(yk-yj) );
-	  buf = 2.0*M_PI*sqrt( dist*dist*dist / (mk+mj+1e-8) )/BINARYSECURITY;
-	  dtnbody = min2(dtnbody,buf);
-	}
+	      for (j = k+1; j < NbPlanets; j++) {
+          xk = sys->x[k];
+          xj = sys->x[j];
+          yk = sys->y[k];
+          yj = sys->y[j];
+          mk = FinalPlanetMass[k];
+          mj = FinalPlanetMass[j];
+          dist = sqrt( (xk-xj)*(xk-xj) + (yk-yj)*(yk-yj) );
+          buf = 2.0*M_PI*sqrt( dist*dist*dist / (mk+mj+1e-8) )/BINARYSECURITY;
+          dtnbody = min2(dtnbody,buf);
+	      }
       }
     } else {
       /* if there is only one planet, we set dtnbody equal to dthydro */
@@ -417,18 +422,18 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
     if (NbPlanets > 1) {
       dtnbody = 1e5;
       for (k = 0; k < NbPlanets; k++) {
-	for (j = k+1; j < NbPlanets; j++) {
-	  xk = sys->x[k];
-	  xj = sys->x[j];
-	  yk = sys->y[k];
-	  yj = sys->y[j];
-	  mk = sys->mass[k];
-	  mj = sys->mass[j];
-	  dist = sqrt( (xk-xj)*(xk-xj) + (yk-yj)*(yk-yj) );
-	  buf = 2.0*M_PI*sqrt( dist*dist*dist / (mk+mj+1e-8) )/BINARYSECURITY;
-	  /* dtnbody is the n-body timestep */
-	  dtnbody = min2(dtnbody,buf);
-	}
+	      for (j = k+1; j < NbPlanets; j++) {
+          xk = sys->x[k];
+          xj = sys->x[j];
+          yk = sys->y[k];
+          yj = sys->y[j];
+          mk = sys->mass[k];
+          mj = sys->mass[j];
+          dist = sqrt( (xk-xj)*(xk-xj) + (yk-yj)*(yk-yj) );
+          buf = 2.0*M_PI*sqrt( dist*dist*dist / (mk+mj+1e-8) )/BINARYSECURITY;
+          /* dtnbody is the n-body timestep */
+          dtnbody = min2(dtnbody,buf);
+	      }
       }
     } else 
       /* if there is only one planet, we set dtnbody to something
@@ -437,27 +442,27 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
 
     if ( (NBPART == 0) || (NoTimestepConstraintByParticles) ) {
       if (IsDisk == YES) {
-	CommunicateBoundaries (Rho, Vrad, Vtheta, Energy, Label, DRho, DVrad, DVtheta);
-	if (SloppyCFL == NO) {  // case by default
-	  gastimestepcfl = 1;
-	  gastimestepcfl = ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, DT-dtemp);
-	  MPI_Allreduce (&gastimestepcfl, &GasTimeStepsCFL, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-	  /* dthydro is the hydrodynamic timestep */
-	  dthydro = (DT-dtemp)/(real)GasTimeStepsCFL;
-	  /* dt is the minimum between dthydro and dtnbody */
-	  dt = min2(dthydro,dtnbody);
-	}
-	AccreteOntoPlanets (Rho, Vrad, Vtheta, dt, sys);
+	      CommunicateBoundaries (Rho, Vrad, Vtheta, Energy, Label, DRho, DVrad, DVtheta);
+        if (SloppyCFL == NO) {  // case by default
+          gastimestepcfl = 1;
+          gastimestepcfl = ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, DT-dtemp);
+          MPI_Allreduce (&gastimestepcfl, &GasTimeStepsCFL, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+          /* dthydro is the hydrodynamic timestep */
+          dthydro = (DT-dtemp)/(real)GasTimeStepsCFL;
+          /* dt is the minimum between dthydro and dtnbody */
+          dt = min2(dthydro,dtnbody);
+        }
+	      AccreteOntoPlanets (Rho, Vrad, Vtheta, dt, sys);
       } else
-	dt = dtnbody;
+	      dt = dtnbody;
     } 
     else {
       if (IsDisk == YES)
-	CommunicateBoundaries (Rho, Vrad, Vtheta, Energy, Label, DRho, DVrad, DVtheta);
-      dt = DustTimeStep;
-      MINDT = DustTimeStep;
-      MAXDT = DustTimeStep;
-      AccreteOntoPlanets (Rho, Vrad, Vtheta, dt, sys);
+        CommunicateBoundaries (Rho, Vrad, Vtheta, Energy, Label, DRho, DVrad, DVtheta);
+        dt = DustTimeStep;
+        MINDT = DustTimeStep;
+        MAXDT = DustTimeStep;
+        AccreteOntoPlanets (Rho, Vrad, Vtheta, dt, sys);
     }
     dtemp += dt;
     if (dt < MINDT)
@@ -475,21 +480,21 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       /* Gravitational potential from star and planet(s) */
       FillForcesArrays (sys);
       /* Planets' velocities are updated with gravitationnal
-	 interaction with disk */
+	    interaction with disk */
       AdvanceSystemFromDisk (force, Rho, Energy, sys, dt);
     }
 
     /* Planets' positions and velocities are updated with
-       gravitational interaction with star and other planets */
+    gravitational interaction with star and other planets */
     AdvanceSystemRK5 (sys, dt);
 
     /* Dust particles' positions and velocities are updated with
-       gravitational interaction with star, planets, and gas drag.
-       Tests have shown that doing a simple first-order integrator
-       gives in practice the same results as a second-order Leapfrog
-       integrator, so in the following we first update positions with
-       dt (semi-update with 2xdt timestep) and then update velocities
-       with dt as well */
+    gravitational interaction with star, planets, and gas drag.
+    Tests have shown that doing a simple first-order integrator
+    gives in practice the same results as a second-order Leapfrog
+    integrator, so in the following we first update positions with
+    dt (semi-update with 2xdt timestep) and then update velocities
+    with dt as well */
     if (NBPART != 0) {
       SemiUpdateDustPositions(dsys, sys, Rho, 2.*dt);  // update particles positions over dt
       UpdateDustVelocities(dsys, sys, Vrad, Vtheta, Rho, dustpcdens, dt);  // update particles velocities over dt
@@ -506,8 +511,8 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       OmegaNew = GetPsysInfo(sys, GET) / dt;
       domega = OmegaNew-OmegaFrame;
       if (IsDisk == YES) {
-	CorrectVtheta (Vtheta, domega);
-	CorrectVtheta (DVtheta, domega);
+        CorrectVtheta (Vtheta, domega);
+        CorrectVtheta (DVtheta, domega);
       }
       OmegaFrame = OmegaNew;
     }
@@ -516,67 +521,70 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       RotateDsys (dsys, OmegaFrame*dt);
       /* CB 02/2024 needed to later damp pcdensX.dat files */
       if (Write_DustDensity == YES)
-	interpolation(dsys, Vrad, Vtheta, Rho, dustpcdens, dt);
+	      interpolation(dsys, Vrad, Vtheta, Rho, dustpcdens, dt);
     }
       
     /* Now we update gas fields */
     if (IsDisk == YES) {
       /* NEW (May 2016): evanescent boundary condition can now damp toward
-	 1D viscously evolving density and radial velocity profiles. Both
-	 profiles are solved through an independent 1D viscous evolution
-	 problem without planets. */
+      1D viscously evolving density and radial velocity profiles. Both
+      profiles are solved through an independent 1D viscous evolution
+      problem without planets. */
       if ( (Evanescent && DampToViscous) || (DampToViscous))
-	SolveOneDViscousEvolution (dt);
+	      SolveOneDViscousEvolution (dt);
+      
       ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 
       Crashed = DetectCrash (Rho);    /* test for negative density values */
       if (DustFluid) 
-	Crashed = DetectCrash (DRho);    /* test for negative density values */
+        Crashed = DetectCrash (DRho);    /* test for negative density values */
       Crashed = DetectCrash (Energy);  /* test for negative energy values */
       if (Crashed == YES) {
-	if (AlreadyCrashed == 0) {
-	  timeCRASH=PhysicalTime;   /* if it appears to be the first crash */
-	  fprintf (stdout,"\nCrash! at time %.12g\n", timeCRASH);
-	  WriteDiskPolar (Rho, 999);    /* We write the HD arrays */
-	  WriteDiskPolar (Vrad, 999);   /* in order to keep a track */
-	  WriteDiskPolar (Vtheta, 999); /* of what happened */
-	  if (DustFluid) {
-	    WriteDiskPolar (DRho, 999);    /* We write the HD arrays */
-	    WriteDiskPolar (DVrad, 999);   /* in order to keep a track */
-	    WriteDiskPolar (DVtheta, 999); /* of what happened */
-	  }
-	  WriteDiskPolar (Energy, 999);
-	}
-	AlreadyCrashed++;
-	masterprint ("c");
-      } else {
-	masterprint (".");
+        if (AlreadyCrashed == 0) {
+          timeCRASH=PhysicalTime;   /* if it appears to be the first crash */
+          fprintf (stdout,"\nCrash! at time %.12g\n", timeCRASH);
+          WriteDiskPolar (Rho, 999);    /* We write the HD arrays */
+          WriteDiskPolar (Vrad, 999);   /* in order to keep a track */
+          WriteDiskPolar (Vtheta, 999); /* of what happened */
+          if (DustFluid) {
+            WriteDiskPolar (DRho, 999);    /* We write the HD arrays */
+            WriteDiskPolar (DVrad, 999);   /* in order to keep a track */
+            WriteDiskPolar (DVtheta, 999); /* of what happened */
+          }
+          WriteDiskPolar (Energy, 999);
+        }
+        AlreadyCrashed++;
+        masterprint ("c");
+      } 
+      else {
+        masterprint (".");
       }
       fflush (stdout);
 
       if (ZMPlus) {
-	/* To model the non-axisymmetric component of the gas
-	   self-gravity with an anisotropic pressure (see aniso.c) */
-	compute_anisotropic_pressurecoeff (sys);
+	      /* To model the non-axisymmetric component of the gas
+	      self-gravity with an anisotropic pressure (see aniso.c) */
+	      compute_anisotropic_pressurecoeff (sys);
       }
 
       /* Thermal diffusion needs to be applied first */
       if (EnergyEquation) {
-	if (EntropyDiffusion || RadiativeDiffusion) {
-	  if (EntropyDiffusion)
-	    ComputeEntropyDiffusion (Rho, Energy);
-	  if (RadiativeDiffusion && !ImplicitRadiativeDiffusion)
-	    ComputeRadiativeDiffusion (Rho, Energy);
-	  SubStep0 (Rho, Energy, dt);
-	}
+      	if (EntropyDiffusion || RadiativeDiffusion) {
+	        if (EntropyDiffusion)
+	          ComputeEntropyDiffusion (Rho, Energy);
+	        if (RadiativeDiffusion && !ImplicitRadiativeDiffusion)
+	          ComputeRadiativeDiffusion (Rho, Energy);
+	        SubStep0 (Rho, Energy, dt);
+	      }
       }
       ComputeSoundSpeed (Rho, Energy, sys);
       ComputePressureField (Rho, Energy);
+
       if (DustFluid)
-	ComputeDustSoundSpeedAndPressure (DRho);
+	      ComputeDustSoundSpeedAndPressure (DRho);
 
       /* Update vrad and vtheta with pressure, gravity and curvature
-	 source terms */
+	    source terms */
       SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt);
 
       // added on July 2023 (Frederic's advise)
@@ -593,7 +601,7 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
         ActualiseGas (DVtheta, DVthetaNew);
       }
       if (DustFluid && ShortFrictionTimeApproximation) {
-	ActualiseGas (DVrad, DVradInt);    /* actualize dust vrad and vtheta */
+	      ActualiseGas (DVrad, DVradInt);    /* actualize dust vrad and vtheta */
         ActualiseGas (DVtheta, DVthetaInt);
       }
 
@@ -602,86 +610,91 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       ComputeDivergenceVelocity (Vrad, Vtheta, DVrad, DVtheta);
 
       if (EnergyEquation) {
-	// CB: March 2022: added (Frederic's advise)
-	ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+	      // CB: March 2022: added (Frederic's advise)
+	      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 	
-	/* Update thermal energy with heating, cooling source terms */
-	if (ViscousHeating) {
-	  ComputeViscousTerms (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho);
-	  ComputeViscousHeating (Rho);
-	}
-	// CB (Dec 2017): function ComputeThermalCooling is no longer 
-	// used (see substep 3, an implicit solver is used there)
-	/*
-	if (ThermalCooling)
-	  ComputeThermalCooling (Rho, Energy);
-	*/
-	SubStep3 (Rho, Vtheta, dt);
-	ActualiseGas (Energy, EnergyNew);
+        /* Update thermal energy with heating, cooling source terms */
+        if (ViscousHeating) {
+          ComputeViscousTerms (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho);
+          ComputeViscousHeating (Rho);
+        }
+        // CB (Dec 2017): function ComputeThermalCooling is no longer 
+        // used (see substep 3, an implicit solver is used there)
+        /*
+        if (ThermalCooling)
+          ComputeThermalCooling (Rho, Energy);
+        */
+        SubStep3 (Rho, Vtheta, dt);
+        ActualiseGas (Energy, EnergyNew);
       }
       ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 
       /* Update velocities, surface density and thermal energy with
-	 advective terms 
-	 CB (04/2020): with dust feedback via particles, we need first 
-	 to communicate boundaries!
+      advective terms 
+      CB (04/2020): with dust feedback via particles, we need first 
+      to communicate boundaries!
       */
       if (DustFeedback && (IsDisk == YES))
-	CommunicateBoundaries (Rho, Vrad, Vtheta, Energy, Label, DRho, DVrad, DVtheta);
+	      CommunicateBoundaries (Rho, Vrad, Vtheta, Energy, Label, DRho, DVrad, DVtheta);
+
       Transport (Rho, Vrad, Vtheta, Energy, Label, dt);
 
       /* Add density and temperature floors */
       if (AddFloors) {
-	AddFloorDensity (Rho);
-	AddFloorEnergy (Energy);
+        AddFloorDensity (Rho);
+        AddFloorEnergy (Energy);
       }
       ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 
       /* Transport and diffusion when dust is modelled as a low-pressure fluid */
       if (DustFluid) {
-	//if (ShortFrictionTimeApproximation) 
-	//  SFTAvelocity (Rho, Vrad, Vtheta, DRho, DVrad, DVtheta);
-	Transportd (DRho, Rho, DVrad, DVtheta, Label, dt);
-	if (DustDiffusion == YES) 
-	  Diffd (DRho, Rho, DVrad, DVtheta, dt);
-	if (AddFloors)
-	  AddFloorDensity (DRho);
-	ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+        //if (ShortFrictionTimeApproximation) 
+        //  SFTAvelocity (Rho, Vrad, Vtheta, DRho, DVrad, DVtheta);
+        Transportd (DRho, Rho, DVrad, DVtheta, Label, dt);
+        if (DustDiffusion == YES) 
+          Diffd (DRho, Rho, DVrad, DVtheta, dt);
+        if (AddFloors)
+          AddFloorDensity (DRho);
+        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       }
 
       /* Call to routine that reestablishes initial surface density on
-	 fixed timescale */
+	    fixed timescale */
       if (AddMass) {
-	DampDensity(Vrad, Vtheta, Rho, Energy, dt, sys);
-	ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
-
+        DampDensity(Vrad, Vtheta, Rho, Energy, dt, sys);
+        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       }
+
       /* Simple treatment of disc evaporation by slowly decreasing the 
-	 axisymmetric surface density profile of the gas */
+	    axisymmetric surface density profile of the gas */
       if (DiscEvaporation) {
-	Evaporation(Rho, dt);
-	ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+        Evaporation(Rho, dt);
+        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       }
 
       /* Photoevaporation via X-Ray star luminosity */
       if (PhotoEvaporation) {
-	ApplyPhotoEvaporation (Vrad, Rho, dt);
-	ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+        ApplyPhotoEvaporation (Vrad, Rho, dt);
+        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       }
 
       /* Update of gas temperature for output */
       ComputeTemperatureField (Rho, Energy);
 
       /* Calculate mass (and mass excess) inside the planet's
-	 circumplanetary disk */
+	    circumplanetary disk */
       if (ComputeCPDMass) {
-	mdcp = CircumPlanetaryMass (Rho, sys);
-	exces_mdcp = mdcp - mdcp0;
+        mdcp = CircumPlanetaryMass (Rho, sys);
+        exces_mdcp = mdcp - mdcp0;
       }
-    }
+
+    } // end if disk is Yes
+
     PhysicalTime += dt;
+
   }
   masterprint ("\n");
+
 }
 
 
@@ -699,17 +712,18 @@ void SubStep0 (Rho, Energy, dt)
   energy = Energy->Field;
   entropydiff = EntropyDiff->Field;
   raddiff  = RadiativeDiff->Field;
+
   /* Update (explicite) with thermal diffusion */
   for (i = 0; i < nr; i++) {
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
       if (EntropyDiffusion)
-	energy[l] += entropydiff[l]*dt;
-      if (RadiativeDiffusion && !ImplicitRadiativeDiffusion) {
-	energy[l] += raddiff[l]*dt;
-      }
+	      energy[l] += entropydiff[l]*dt;
+      if (RadiativeDiffusion && !ImplicitRadiativeDiffusion)
+	      energy[l] += raddiff[l]*dt;
     }
   }
+
   /* Implicit update with radiative diffusion */
   if (ImplicitRadiativeDiffusion) {
     //niterSOR = GLOBAL_SORsolver_RadiativeDiffusion (Rho, Energy, dt, omegaSOR);
@@ -719,7 +733,7 @@ void SubStep0 (Rho, Energy, dt)
     else {
       omegaSOR *= 0.9999;
       if ( (omegaSOR >= 2.0) || (omegaSOR <= 1.0) )
-	omegaSOR = omegaSOR_best;	
+	      omegaSOR = omegaSOR_best;	
     }
     //masterprint ("niterSOR = %d, niterbuf = %d, omegaSOR = %lg, omegaBEST = %lg\n",niterSOR,niterbuf,omegaSOR,omegaSOR_best);
     niterbuf = niterSOR;
@@ -775,41 +789,51 @@ void SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt)
     dvthetaint = DVthetaInt->Field;
     dPress = DPressure->Field;  // dust pressure calculated just before call to substep1
     St = Stokes->Field;
+
     /* Convert particle's mean density from g/cm^3 to code units */
     dust_internal_density = RHOPART*1000.0*pow(unit_length, 3.)/unit_mass;
+    
     /* Convert particle's radius from meters to code units */
     dust_radius = Sizepart/unit_length;
     rho_code_tocgs = 0.1*unit_mass*pow(unit_length,-2.0);
+
     for (i = 0; i < nr; i++){
       for (j = 0; j < ns; j++){
-	l = j+i*ns;
-	/* Molecular mean-free path ~ m_H2 H / Sigma_gas d^2 with m_H2
-	   mass of H2, H pressure scale height and d ~ typical
-	   diameter of a particle */
-	densg_cgs = rho[l]*rho_code_tocgs;  // in g cm^-2
-	lambda = 3.34e-8 * pow(densg_cgs,-1.) * AspectRatio(Rmed[i]) * Rmed[i]; // in code units
-	/* Knudsen number, note that dust_radius is already in code units */
-	Kn = 0.5*lambda/dust_radius;
-	/* Gas relative Mach number at particle's position: |dV| / cs */
-	Mach = sqrt( (dvrad[l]-vrad[l])*(dvrad[l]-vrad[l]) + (dvtheta[l]-vtheta[l])*(dvtheta[l]-vtheta[l]) ) / cs[l];
-	/* f_D coefficient to link the subsonic and the supersonic regimes */
-	f_D = sqrt( 1.0 + 9.0*M_PI*Mach*Mach/128.0 );
-	/* Reynolds number */
-	Re = 3.0*sqrt(PI/8.0)*Mach/Kn;
-	/* k_D coefficient that describes the Stokes regime */
-	if (Re <= 500.0)
-	  k_D = 1.0+0.15*pow(Re,0.687);
-	else {
-	  if ( (Re > 500.0) && (Re <= 1500.0) )
-	    k_D = 3.96e-6*pow(Re,2.4);
-	  if (Re > 1500.0)
-	    k_D = 0.11*Re;
-	}
-	/* Final expression for drag coefficient Cdrag as in Paardekooper 07 */
-	//Cdrag = pow(3.0*Kn+1.0,2.0) * pow(9.0*Kn*Kn*f_D + 3.0*Kn*k_D,-1.0);
-	Cdrag = (3.0*Kn+1.0)*(3.0*Kn+1.0) / (9.0*Kn*Kn*f_D + 3.0*Kn*k_D);
-	/* Dimensionless stopping time at the particle = stokes number */
-	St[l] =  0.5*M_PI*Cdrag*dust_internal_density*dust_radius/rho[l];
+        l = j+i*ns;
+
+        /* Molecular mean-free path ~ m_H2 H / Sigma_gas d^2 with m_H2
+          mass of H2, H pressure scale height and d ~ typical
+          diameter of a particle */
+        densg_cgs = rho[l]*rho_code_tocgs;  // in g cm^-2
+        lambda = 3.34e-8 * pow(densg_cgs,-1.) * AspectRatio(Rmed[i]) * Rmed[i]; // in code units
+        
+        /* Knudsen number, note that dust_radius is already in code units */
+        Kn = 0.5*lambda/dust_radius;
+
+        /* Gas relative Mach number at particle's position: |dV| / cs */
+        Mach = sqrt( (dvrad[l]-vrad[l])*(dvrad[l]-vrad[l]) + (dvtheta[l]-vtheta[l])*(dvtheta[l]-vtheta[l]) ) / cs[l];
+
+        /* f_D coefficient to link the subsonic and the supersonic regimes */
+        f_D = sqrt( 1.0 + 9.0*M_PI*Mach*Mach/128.0 );
+
+        /* Reynolds number */
+        Re = 3.0*sqrt(PI/8.0)*Mach/Kn;
+
+        /* k_D coefficient that describes the Stokes regime */
+        if (Re <= 500.0)
+          k_D = 1.0+0.15*pow(Re,0.687);
+        else {
+          if ( (Re > 500.0) && (Re <= 1500.0) )
+            k_D = 3.96e-6*pow(Re,2.4);
+          if (Re > 1500.0)
+            k_D = 0.11*Re;
+        }
+        
+        /* Final expression for drag coefficient Cdrag as in Paardekooper 07 */
+        //Cdrag = pow(3.0*Kn+1.0,2.0) * pow(9.0*Kn*Kn*f_D + 3.0*Kn*k_D,-1.0);
+        Cdrag = (3.0*Kn+1.0)*(3.0*Kn+1.0) / (9.0*Kn*Kn*f_D + 3.0*Kn*k_D);
+        /* Dimensionless stopping time at the particle = stokes number */
+        St[l] =  0.5*M_PI*Cdrag*dust_internal_density*dust_radius/rho[l];
       }
     }
   } 
@@ -822,56 +846,56 @@ void SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt)
     for (i = 1; i < nr; i++) {
       invomega = pow(Rmed[i],1.5);
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	lim = l-ns;
-	ljp = l+1;
-	if (j == ns-1) ljp = i*ns;
-	gradp = (Press[l]-Press[lim])*2.0/(rho[l]+rho[lim])*InvDiffRmed[i];
-	radgradp[l] = (Press[l]-Press[lim])*InvDiffRmed[i];
-	gradphi = (Pot[l]-Pot[lim])*InvDiffRmed[i];
-	radindacc[l] = -(indpot[l]-indpot[lim])*InvDiffRmed[i];
-	vt2 = vtheta[l]+vtheta[ljp]+vtheta[lim]+vtheta[ljp-ns];
-	vt2 = vt2/4.0+Rinf[i]*OmegaFrame;
-	vt2 = vt2*vt2;
-	vradint[l] = vrad[l]+dt*(-gradp-gradphi+vt2*InvRinf[i]);
-	if (DustFeedback && !DustFluid) {
-	  vradint[l] += dt*radfbacc[l];
-	}
-	if (DustFluid) {
-	  ts = St[l] * invomega;
-	  if (!ShortFrictionTimeApproximation) {
-	    dgradp = (dPress[l]-dPress[lim])*2.0/(drho[l]+drho[lim])*InvDiffRmed[i];
-	    dvt2 = dvtheta[l]+dvtheta[ljp]+dvtheta[lim]+dvtheta[ljp-ns];
-	    dvt2 = dvt2/4.0+Rinf[i]*OmegaFrame;
-	    dvt2 = dvt2*dvt2;
-	    dvradint[l] = dvrad[l]+dt*(-gradphi-dgradp+dvt2*InvRinf[i]);
-	    if (DustFeelDisk) {
-	      //dforcer   = -(dvrad[l]-vrad[l])/(St[l]*pow(Rmed[i],1.5) + dt/2.);
-	      //dforcer = -(dvrad[l]-vrad[l])/(St[l]*pow(Rmed[i],1.5));
-	      //dvradint[l] += dt*dforcer;
-	      // implicite scheme test:
-	      dvradint[l] = (dvradint[l]*ts + vrad[l]*dt)/(ts+dt);
-	    }
-	  }
-	  /* Dust velocity in the short-friction time approximation: original
-	     expression from Johansen & Klahr (2005), generalised to include
-	     dust drag on gas */
-	  else {
-	    if (DustFeelDisk) {
-	      if (DustFeedback)
-		ts /= (1.0+drho[l]/rho[l]);
-	      dvradint[l] = vrad[l] + ts*gradp;
-	    }
-	  }
-	  if (DustFeedback) {
-	    ts = St[l] * invomega;
-	    //radfbacc[l] = (drho[l]/rho[l])*(dvrad[l]-vrad[l])/(St[l]*pow(Rmed[i],1.5));
-	    radfbacc[l]   = (drho[l]/rho[l])*(dvrad[l]-vrad[l])/(ts + dt/2.);
-	    //vradint[l] += dt*radfbacc[l];
-	    // implicite scheme test:
-	    vradint[l] = (vradint[l]*ts + (drho[l]/rho[l])*dvrad[l]*dt) / (ts + dt*(drho[l]/rho[l]));
-	  }
-	}
+        l = j+i*ns;
+        lim = l-ns;
+        ljp = l+1;
+        if (j == ns-1) ljp = i*ns;
+        gradp = (Press[l]-Press[lim])*2.0/(rho[l]+rho[lim])*InvDiffRmed[i];
+        radgradp[l] = (Press[l]-Press[lim])*InvDiffRmed[i];
+        gradphi = (Pot[l]-Pot[lim])*InvDiffRmed[i];
+        radindacc[l] = -(indpot[l]-indpot[lim])*InvDiffRmed[i];
+        vt2 = vtheta[l]+vtheta[ljp]+vtheta[lim]+vtheta[ljp-ns];
+        vt2 = vt2/4.0+Rinf[i]*OmegaFrame;
+        vt2 = vt2*vt2;
+        vradint[l] = vrad[l]+dt*(-gradp-gradphi+vt2*InvRinf[i]);
+        if (DustFeedback && !DustFluid) {
+          vradint[l] += dt*radfbacc[l];
+        }
+        if (DustFluid) {
+          ts = St[l] * invomega;
+          if (!ShortFrictionTimeApproximation) {
+            dgradp = (dPress[l]-dPress[lim])*2.0/(drho[l]+drho[lim])*InvDiffRmed[i];
+            dvt2 = dvtheta[l]+dvtheta[ljp]+dvtheta[lim]+dvtheta[ljp-ns];
+            dvt2 = dvt2/4.0+Rinf[i]*OmegaFrame;
+            dvt2 = dvt2*dvt2;
+            dvradint[l] = dvrad[l]+dt*(-gradphi-dgradp+dvt2*InvRinf[i]);
+            if (DustFeelDisk) {
+              //dforcer   = -(dvrad[l]-vrad[l])/(St[l]*pow(Rmed[i],1.5) + dt/2.);
+              //dforcer = -(dvrad[l]-vrad[l])/(St[l]*pow(Rmed[i],1.5));
+              //dvradint[l] += dt*dforcer;
+              // implicite scheme test:
+              dvradint[l] = (dvradint[l]*ts + vrad[l]*dt)/(ts+dt);
+            }
+          }
+          /* Dust velocity in the short-friction time approximation: original
+            expression from Johansen & Klahr (2005), generalised to include
+            dust drag on gas */
+          else {
+            if (DustFeelDisk) {
+              if (DustFeedback)
+          ts /= (1.0+drho[l]/rho[l]);
+              dvradint[l] = vrad[l] + ts*gradp;
+            }
+          }
+          if (DustFeedback) {
+            ts = St[l] * invomega;
+            //radfbacc[l] = (drho[l]/rho[l])*(dvrad[l]-vrad[l])/(St[l]*pow(Rmed[i],1.5));
+            radfbacc[l]   = (drho[l]/rho[l])*(dvrad[l]-vrad[l])/(ts + dt/2.);
+            //vradint[l] += dt*radfbacc[l];
+            // implicite scheme test:
+            vradint[l] = (vradint[l]*ts + (drho[l]/rho[l])*dvrad[l]*dt) / (ts + dt*(drho[l]/rho[l]));
+          }
+        }
       }
     }
 
@@ -887,64 +911,64 @@ void SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt)
       invomega = pow(Rmed[i],1.5);
       supp_torque = IMPOSEDDISKDRIFT*0.5*pow(Rmed[i],-2.5)*SIGMA0/SigmaMed[i];
       if (CavityTorque) {
-	/* June 2022 (Guillaume Robert's internship) */
-	vr_over_cs = -( 0.5*(FRACINT+FRACEXT) + 0.5*(FRACINT-FRACEXT)*tanh((CAVITYRADIUS-Rmed[i])/CAVITYWIDTH) );  // negative definite
+        /* June 2022 (Guillaume Robert's internship) */
+        vr_over_cs = -( 0.5*(FRACINT+FRACEXT) + 0.5*(FRACINT-FRACEXT)*tanh((CAVITYRADIUS-Rmed[i])/CAVITYWIDTH) );  // negative definite
       }
       
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	ljm = l-1;
-	if (j == 0) ljm = i*ns+ns-1;
-	gradp = (Press[l]-Press[ljm])*2.0/(rho[l]+rho[ljm])*invdxtheta;
-	azigradp[l] = (Press[l]-Press[ljm])*invdxtheta;
-	if ( ZMPlus ) {
-	  /* To model the non-axisymmetric component of the gas
-	     self-gravity with an anisotropic pressure (see aniso.c) */
-	  gradp *= SG_aniso_coeff;
-	}
-	gradphi = (Pot[l]-Pot[ljm])*invdxtheta;
-	aziindacc[l] = -(indpot[l]-indpot[ljm])*invdxtheta;
-	vthetaint[l] = vtheta[l]-dt*(gradp+gradphi);
-	/* June 2022 (Guillaume Robert's internship) */
-	if (CavityTorque)
-	  supp_torque = 0.5*pow(Rmed[i],-1.5)*vr_over_cs*cs[l];
-	/* --------- */
-	vthetaint[l] += dt*supp_torque;
-	if (DustFeedback && !DustFluid) {
-	  vthetaint[l] += dt*azifbacc[l];
-	}
-	if (DustFluid) { 
-	  ts = St[l] * invomega;
-	  if (!ShortFrictionTimeApproximation) {
-	    dgradp = (dPress[l]-dPress[ljm])*2.0/(drho[l]+drho[ljm])*invdxtheta;
-	    dvthetaint[l] = dvtheta[l]-dt*(gradphi+dgradp);
-	    if(DustFeelDisk){
-	      //dforcet =   -(dvtheta[l]-vtheta[l])/(St[l]*pow(Rmed[i],1.5) + dt/2.);
-	      //dforcet = -(dvtheta[l]-vtheta[l])/(St[l]*pow(Rmed[i],1.5));
-	      //dvthetaint[l] += dt*dforcet; 
-	      // implicite scheme test:
-	      dvthetaint[l] = (dvthetaint[l]*ts + vtheta[l]*dt)/(ts+dt);
-	    }
-	  }
-	  /* Dust velocity in the short-friction time approximation: original
-	     expression from Johansen & Klahr (2005), generalised to include
-	     dust drag on gas */
-	  else {
-	    if (DustFeelDisk) {
-	      if (DustFeedback)
-		ts /= (1.0+drho[l]/rho[l]);
-	      dvthetaint[l] = vtheta[l] + ts*gradp;
-	    }
-	  }
-	  if (DustFeedback) {
-	    ts = St[l] * invomega;
-	    //azifbacc[l] = (drho[l]/rho[l])*(dvtheta[l]-vtheta[l])/(St[l]*pow(Rmed[i],1.5));
-	    azifbacc[l] =   (drho[l]/rho[l])*(dvtheta[l]-vtheta[l])/(ts + dt/2.);
-	    //vthetaint[l] += dt*azifbacc[l];
-	    // implicite scheme test:
-	    vthetaint[l] = (vthetaint[l]*ts + (drho[l]/rho[l])*dvtheta[l]*dt)/(ts+dt*(drho[l]/rho[l]));
-	  }
-	}
+        l = j+i*ns;
+        ljm = l-1;
+        if (j == 0) ljm = i*ns+ns-1;
+        gradp = (Press[l]-Press[ljm])*2.0/(rho[l]+rho[ljm])*invdxtheta;
+        azigradp[l] = (Press[l]-Press[ljm])*invdxtheta;
+        if ( ZMPlus ) {
+          /* To model the non-axisymmetric component of the gas
+            self-gravity with an anisotropic pressure (see aniso.c) */
+          gradp *= SG_aniso_coeff;
+        }
+        gradphi = (Pot[l]-Pot[ljm])*invdxtheta;
+        aziindacc[l] = -(indpot[l]-indpot[ljm])*invdxtheta;
+        vthetaint[l] = vtheta[l]-dt*(gradp+gradphi);
+        /* June 2022 (Guillaume Robert's internship) */
+        if (CavityTorque)
+          supp_torque = 0.5*pow(Rmed[i],-1.5)*vr_over_cs*cs[l];
+        /* --------- */
+        vthetaint[l] += dt*supp_torque;
+        if (DustFeedback && !DustFluid) {
+          vthetaint[l] += dt*azifbacc[l];
+        }
+        if (DustFluid) { 
+          ts = St[l] * invomega;
+          if (!ShortFrictionTimeApproximation) {
+            dgradp = (dPress[l]-dPress[ljm])*2.0/(drho[l]+drho[ljm])*invdxtheta;
+            dvthetaint[l] = dvtheta[l]-dt*(gradphi+dgradp);
+            if(DustFeelDisk){
+              //dforcet =   -(dvtheta[l]-vtheta[l])/(St[l]*pow(Rmed[i],1.5) + dt/2.);
+              //dforcet = -(dvtheta[l]-vtheta[l])/(St[l]*pow(Rmed[i],1.5));
+              //dvthetaint[l] += dt*dforcet; 
+              // implicite scheme test:
+              dvthetaint[l] = (dvthetaint[l]*ts + vtheta[l]*dt)/(ts+dt);
+            }
+          }
+          /* Dust velocity in the short-friction time approximation: original
+            expression from Johansen & Klahr (2005), generalised to include
+            dust drag on gas */
+          else {
+            if (DustFeelDisk) {
+              if (DustFeedback)
+          ts /= (1.0+drho[l]/rho[l]);
+              dvthetaint[l] = vtheta[l] + ts*gradp;
+            }
+          }
+          if (DustFeedback) {
+            ts = St[l] * invomega;
+            //azifbacc[l] = (drho[l]/rho[l])*(dvtheta[l]-vtheta[l])/(St[l]*pow(Rmed[i],1.5));
+            azifbacc[l] =   (drho[l]/rho[l])*(dvtheta[l]-vtheta[l])/(ts + dt/2.);
+            //vthetaint[l] += dt*azifbacc[l];
+            // implicite scheme test:
+            vthetaint[l] = (vthetaint[l]*ts + (drho[l]/rho[l])*dvtheta[l]*dt)/(ts+dt*(drho[l]/rho[l]));
+          }
+        }
       }
     }
   }
@@ -1017,19 +1041,19 @@ void SubStep2 (Rho, Energy, DRho, dt)
       if (dv < 0.0)
         qt[l] = CVNR*CVNR*rho[l]*dv*dv;
       else
-	qt[l] = 0.0;
+	      qt[l] = 0.0;
       /* Dust Fluid */
       if (DustFluid) {
-	ddv = dvrad[lip]-dvrad[l];
-	if (ddv < 0.0)
-	  dqr[l] = CVNR*CVNR*drho[l]*ddv*ddv;
-	else
-	  dqr[l] = 0.0;
-	ddv = dvtheta[ljp]-dvtheta[l];
-	if (ddv < 0.0) 
-	  dqt[l] = CVNR*CVNR*drho[l]*ddv*ddv;
-	else
-	  dqt[l] = 0.0;
+	      ddv = dvrad[lip]-dvrad[l];
+        if (ddv < 0.0)
+          dqr[l] = CVNR*CVNR*drho[l]*ddv*ddv;
+        else
+          dqr[l] = 0.0;
+        ddv = dvtheta[ljp]-dvtheta[l];
+        if (ddv < 0.0) 
+          dqt[l] = CVNR*CVNR*drho[l]*ddv*ddv;
+        else
+          dqt[l] = 0.0;
       }
     }
   }
@@ -1038,11 +1062,11 @@ void SubStep2 (Rho, Energy, DRho, dt)
 #pragma omp for nowait
     for (i = 1; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	lim = l-ns;
-	vradnew[l] = vrad[l]-dt*2.0/(rho[l]+rho[lim])*(qr[l]-qr[lim])*InvDiffRmed[i];
-	if (DustFluid)
-	  dvradnew[l] = dvrad[l]-dt*2.0/(drho[l]+drho[lim])*(dqr[l]-dqr[lim])*InvDiffRmed[i]; /* dust */
+        l = j+i*ns;
+        lim = l-ns;
+        vradnew[l] = vrad[l]-dt*2.0/(rho[l]+rho[lim])*(qr[l]-qr[lim])*InvDiffRmed[i];
+        if (DustFluid)
+          dvradnew[l] = dvrad[l]-dt*2.0/(drho[l]+drho[lim])*(dqr[l]-dqr[lim])*InvDiffRmed[i]; /* dust */
       }
     }
 #pragma omp for
@@ -1050,22 +1074,22 @@ void SubStep2 (Rho, Energy, DRho, dt)
       dxtheta = (PMAX-PMIN)/(real)ns*Rmed[i];
       invdxtheta = 1.0/dxtheta;
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	lip = l+ns;
-	ljm = l-1;
-	if (j == 0) ljm = i*ns+ns-1;
-	ljp = l+1;
-	if (j == ns-1) ljp = i*ns;
-	vthetanew[l] = vtheta[l]-dt*2.0/(rho[l]+rho[ljm])*(qt[l]-qt[ljm])*invdxtheta;
-	if (DustFluid)
-	  dvthetanew[l] = dvtheta[l]-dt*2.0/(drho[l]+drho[ljm])*(dqt[l]-dqt[ljm])*invdxtheta; /* dust */
-	if (EnergyEquation) {
-	  energyint[l] = energy[l] -				\
-	    dt*qr[l]*(vrad[lip]-vrad[l])*InvDiffRsup[i] -		\
-	    dt*qt[l]*(vtheta[ljp]-vtheta[l])*invdxtheta;
-	  test[l] = -qr[l]*(vrad[lip]-vrad[l])*InvDiffRsup[i] -	\
-	    qt[l]*(vtheta[ljp]-vtheta[l])*invdxtheta;
-	}
+        l = j+i*ns;
+        lip = l+ns;
+        ljm = l-1;
+        if (j == 0) ljm = i*ns+ns-1;
+        ljp = l+1;
+        if (j == ns-1) ljp = i*ns;
+        vthetanew[l] = vtheta[l]-dt*2.0/(rho[l]+rho[ljm])*(qt[l]-qt[ljm])*invdxtheta;
+        if (DustFluid)
+          dvthetanew[l] = dvtheta[l]-dt*2.0/(drho[l]+drho[ljm])*(dqt[l]-dqt[ljm])*invdxtheta; /* dust */
+        if (EnergyEquation) {
+          energyint[l] = energy[l] -				\
+            dt*qr[l]*(vrad[lip]-vrad[l])*InvDiffRsup[i] -		\
+            dt*qt[l]*(vtheta[ljp]-vtheta[l])*invdxtheta;
+          test[l] = -qr[l]*(vrad[lip]-vrad[l])*InvDiffRsup[i] -	\
+            qt[l]*(vtheta[ljp]-vtheta[l])*invdxtheta;
+        }
       }
     }
   }
@@ -1081,9 +1105,7 @@ void SubStep3 (Rho, Vtheta, dt)
   real *energy, *energynew, *dens, *divergence, *vischeat, *thercool, *vtheta, *fbedot, *opacity;
   real num, den, omega, beta, coolingtime, tau, tau_eff, temp, temp_irr;
   real dTdRp, dTdRm, dTdR, costheta, buf;
-  // parameters for shadow function:
-  real *shadow_function;
-  real albedo=0.1, A=0.999, delta=28.6*M_PI/180., sigma=delta/10., MassTaper, Lstar;
+  real albedo=0.1, Lstar;
   nr = Rho->Nrad;
   ns = Rho->Nsec;
   dens = Rho->Field;
@@ -1095,6 +1117,7 @@ void SubStep3 (Rho, Vtheta, dt)
   thercool = ThermCool->Field;
   fbedot   = FBedot->Field;
   opacity = Opacity->Field;
+
   /* In this substep, we update the gas thermal energy with source
      terms (compression/dilatation, viscous heating, radiative
      (thermal) cooling, simple beta cooling, or via a temperature
@@ -1102,162 +1125,151 @@ void SubStep3 (Rho, Vtheta, dt)
 #pragma omp parallel private(j,l,num,den)
   {
 #pragma omp for
+
     if (!ThermalCooling) {
       /* First Update (implicite) with pdV only */
       for (i = 0; i < nr; i++) {
-	for (j = 0; j < ns; j++) {
-	  l = j+i*ns;
-	  num = energy[l] + (ViscousHeating == YES ? 1 : 0)*vischeat[l]*dt;
-	  den = 1.0+(ADIABATICINDEX-1.0)*dt*divergence[l];
-	  energynew[l] = num/den;
-	}
+        for (j = 0; j < ns; j++) {
+          l = j+i*ns;
+          num = energy[l] + (ViscousHeating == YES ? 1 : 0)*vischeat[l]*dt;
+          den = 1.0+(ADIABATICINDEX-1.0)*dt*divergence[l];
+          energynew[l] = num/den;
+	      }
       }
       /* Here cooling is modeled through a temperature prescription,
-	 with characteristic time is PrescTimeMed(r). Energy update is
-	 implicite. */
+	    with characteristic time is PrescTimeMed(r). Energy update is
+	    implicite. */
       if (TempPresc) {
-	for (i = 0; i < nr; i++) {
-	  for (j = 0; j < ns; j++) {
-	    l = j+i*ns;
-	    num = energynew[l] + EnergyMed[i]*(dens[l]/SigmaMed[i])*(dt/PrescTimeMed[i]);
-	    den = 1.0+dt/PrescTimeMed[i]; 
-	    energynew[l] = num/den;
-	  }
-	}
+        for (i = 0; i < nr; i++) {
+          for (j = 0; j < ns; j++) {
+            l = j+i*ns;
+            num = energynew[l] + EnergyMed[i]*(dens[l]/SigmaMed[i])*(dt/PrescTimeMed[i]);
+            den = 1.0+dt/PrescTimeMed[i]; 
+            energynew[l] = num/den;
+          }
+        }
       }
       /* Case of a simple beta-cooling, where the cooling source term
-	 reads -e/tau, with tau = beta/Omega */
+	     reads -e/tau, with tau = beta/Omega */
       if (BetaCooling) {
-	for (i = 0; i < nr; i++) {
-	  omega = 0.0;
-	  for (j = 0; j < ns; j++) {
-	    l = j+i*ns;
-	    omega += (vtheta[l] + Rmed[i]*OmegaFrame);
-	  }
-	  omega /= (real)ns;
-	  omega /= Rmed[i];
-	  beta  = ComputeBetaCooling(Rmed[i]);
-	  for (j = 0; j < ns; j++) {
-	    l = j+i*ns;
-	    num = energynew[l];
-	    coolingtime = beta / omega;
-	    den = 1.0+dt/coolingtime; 
-	    energynew[l] = num/den;
-	  }
-	}
+        for (i = 0; i < nr; i++) {
+          omega = 0.0;
+          for (j = 0; j < ns; j++) {
+            l = j+i*ns;
+            omega += (vtheta[l] + Rmed[i]*OmegaFrame);
+          }
+          omega /= (real)ns;
+          omega /= Rmed[i];
+          beta  = ComputeBetaCooling(Rmed[i]);
+          for (j = 0; j < ns; j++) {
+            l = j+i*ns;
+            num = energynew[l];
+            coolingtime = beta / omega;
+            den = 1.0+dt/coolingtime; 
+            energynew[l] = num/den;
+          }
+        }
       }
     }
+
     else { // if thermal cooling set to yes
       /* Implicite update with thermal cooling, viscous heating and
-	 stellar irradiation in option */
+	    stellar irradiation in option */
       if (StellarIrradiation && ImposedStellarLuminosity) {
-	// convert stellar luminosity from Watt to code units
-	// remember that STELLARLUMINOSITY is set in Solar luminosities in .par file
-	Lstar = STELLARLUMINOSITY*3.8e26 * pow(unit_mass,-1.0) * pow(unit_length,-2.0) * pow(unit_time, 3.0);
-	// define mass tapering function if shadows are included
-	if (MASSTAPER > 1e-2) {
-	  MassTaper = (PhysicalTime-PhysicalTimeInitial)/(MASSTAPER*2.0*M_PI);
-	  MassTaper = (MassTaper > 1.0 ? 1.0 : pow(sin(MassTaper*M_PI/2.0),2.0));
-	} else
-	  MassTaper = 1.0;
-	// define shadow function
-	shadow_function = malloc (NSEC*sizeof(real));
-	for (j = 0; j < ns; j++) {
-	  if ( (Azimuth[j] > M_PI-0.5*delta) && (Azimuth[j] < M_PI+0.5*delta) )
-	    shadow_function[j] = (1.0-A*exp(-pow(Azimuth[j],4.0)*pow(sigma,-2.0))-A*exp(-pow(Azimuth[j]-M_PI,4.0)*pow(sigma,-2.0)))*MassTaper;
-	  else
-	    shadow_function[j] = 1.0;
-	}
+        // convert stellar luminosity from Watt to code units
+        // remember that STELLARLUMINOSITY is set in Solar luminosities in .par file
+        Lstar = STELLARLUMINOSITY*3.8e26 * pow(unit_mass,-1.0) * pow(unit_length,-2.0) * pow(unit_time, 3.0);
       }
       for (i = 0; i < nr; i++) {
-	for (j = 0; j < ns; j++) {
-	  l = j+i*ns;
-	  //energynew[l] -= thercool[l]*dt;  // old explicite update
-	  tau = 0.5*opacity[l]*dens[l];      // calculation valid even if a constant opacity is set in .par file
-	  tau_eff = 0.375*tau + 0.25*sqrt(3.0) + 0.25/tau; // effective optical depth
-	  temp = (ADIABATICINDEX-1.0)*energy[l]*pow(dens[l],-1.0);  // temperature at time t
-	  if (StellarIrradiation) {
-	    if (!ImposedStellarLuminosity) {
-	      /* case where stellar irradiation sets a prescribed
-	       background temperature profile, whose value at code
-	       unit of length and power-law exponent are set in the
-	       .par parameter file */
-	      // BACKGROUNDTEMPERATURE is meant to be the gas temperature 
-	      // set by stellar irradiation at code's unit of length
-	      temp_irr = (BACKGROUNDTEMPERATURE/unit_temperature) * pow(Rmed[i],SLOPEBACKGROUNDTEMPERATURE);
-	    } else {
-	      /* case where irradiation heating term calculated with
-		 imposed stellar luminosity. In that case the heating
-		 source term reads (1-beta) Lstar/4piR^2 cos(theta)
-		 with beta the albedo (coded in raw in current
-		 routine), Lstar the stellar luminosity set in Solar
-		 luminosities in the .par parameter file, and theta
-		 the grazing angle. We work out the background
-		 temperature profile temp_irr that is equivalent to
-		 above source term */
-	      // (i) cosinus of grazing angle theta: cos(theta) = dH/dR - H/R
-	      // with H = T^1/2 / Omega. This gives: 
-	      // cos(theta) = 0.5sqrt(RT(R)) x (1 + dlog(T)/dlog(R))
-	      if ( (i > 0) && (i < nr-1) ) {
-		dTdRp = InvDiffRmed[i+1]*((ADIABATICINDEX-1.0)*energy[l+ns]*pow(dens[l+ns],-1.0)-temp);
-		dTdRm = InvDiffRmed[i]*(temp-(ADIABATICINDEX-1.0)*energy[l-ns]*pow(dens[l-ns],-1.0));
-		dTdR  = 0.5*(dTdRp+dTdRm);
-	      } else {
-		if (i==0)
-		  dTdR = InvDiffRmed[i+1]*((ADIABATICINDEX-1.0)*energy[l+ns]*pow(dens[l+ns],-1.0)-temp);
-		if (i==nr-1)
-		  dTdR = InvDiffRmed[i]*(temp-(ADIABATICINDEX-1.0)*energy[l-ns]*pow(dens[l-ns],-1.0));
-	      }
-	      costheta = 0.5*sqrt(Rmed[i]*temp)*(1.0 + Rmed[i]*dTdR/temp);
-	      if (costheta > 1) {
-		//printf ("Issue with costheta calculation in substep3 as costheta = %lg\n",costheta);
-		//printf ("i = %d, tau_eff = %lg, shadow = %lg, costheta = %lg, temp = %lg, dTdT = %lg\n",i, tau_eff, shadow_function[j], costheta, temp, dTdR);
-		//prs_exit();
-		costheta = 1.0;
-	      }
-	      if (costheta < 0) {
-		//printf ("Issue with costheta calculation in substep3 as costheta = %lg\n",costheta);
-		//printf ("i = %d, tau_eff = %lg, shadow = %lg, costheta = %lg, temp = %lg, dTdT = %lg\n",i, tau_eff, shadow_function[j], costheta, temp, dTdR);
-		costheta = 0.0;
-	      }
-	      //costheta = 0.04;  // cuidadin!
-	      costheta = 0.5*sqrt(Rmed[i]*temp)*(2.0*FLARINGINDEX);  // cuidadin!
-	      // (iii) obtain equivalent irradiation temperature profile:
-	      buf = 0.5*(tau_eff/sigma_SB)*(1.0-albedo)*shadow_function[j]*(Lstar/4.0/M_PI/Rmed[i]/Rmed[i])*costheta;
-	      temp_irr = pow(buf,0.25);
-	      //
-	      //printf("i = %d: tau_eff = %lg, costheta = %lg, buf = %lg, temp_irr = %lg, temp = %lg\n", i, tau_eff, costheta, buf, temp_irr, temp);
-	      //if ((PhysicalTime != 0.0) && (i == nr-1))
-	      //	prs_exit();
-	      //
-	      if (isnan(temp_irr) == 1) {
-		masterprint ("NaN issue with temp_irr calculation in substep 3\n");
-		masterprint ("buf = %lg, i = %d, tau_eff = %lg, shadow = %lg, costheta = %lg, temp = %lg\n",buf, i, tau_eff, shadow_function[j], costheta, temp*unit_temperature);
-		prs_exit();
-	      }
-	    }
-	    num = energy[l] + dt*(vischeat[l]*(ViscousHeating == YES ? 1 : 0) +	\
-				  (2.0*sigma_SB/tau_eff)*(3.0*pow(temp,4.0) + pow(temp_irr,4.0)));
-	  } else {
-	    num = energy[l] + dt*(vischeat[l]*(ViscousHeating == YES ? 1 : 0) +	\
-				  (6.0*sigma_SB/tau_eff)*pow(temp,4.0));
-	  }
-	  den = 1.0+(ADIABATICINDEX-1.0)*dt*divergence[l]+		\
-	    8.0*dt*(sigma_SB/tau_eff)*(ADIABATICINDEX-1.0)*pow(temp,3.0)*pow(dens[l],-1.0);
-	  energynew[l] = num/den;
-	}
+        for (j = 0; j < ns; j++) {
+          l = j+i*ns;
+          tau = 0.5*opacity[l]*dens[l];      // calculation valid even if a constant opacity is set in .par file
+          tau_eff = 0.375*tau + 0.25*sqrt(3.0) + 0.25/tau; // effective optical depth
+          temp = (ADIABATICINDEX-1.0)*energy[l]*pow(dens[l],-1.0);  // temperature at time t
+
+          if (StellarIrradiation) {
+
+            if (!ImposedStellarLuminosity) {
+              /* case where stellar irradiation sets a prescribed
+              background temperature profile, whose value at code
+              unit of length and power-law exponent are set in the
+              .par parameter file */
+              // BACKGROUNDTEMPERATURE is meant to be the gas temperature 
+              // set by stellar irradiation at code's unit of length
+              temp_irr = (BACKGROUNDTEMPERATURE/unit_temperature) * pow(Rmed[i],SLOPEBACKGROUNDTEMPERATURE);
+            } else {
+              /* case where irradiation heating term calculated with
+              imposed stellar luminosity. In that case the heating
+              source term reads (1-beta) Lstar/4piR^2 cos(theta)
+              with beta the albedo (coded in raw in current
+              routine), Lstar the stellar luminosity set in Solar
+              luminosities in the .par parameter file, and theta
+              the grazing angle. We work out the background
+              temperature profile temp_irr that is equivalent to
+              above source term */
+              // (i) cosinus of grazing angle theta: cos(theta) = dH/dR - H/R
+              // with H = T^1/2 / Omega. This gives: 
+              // cos(theta) = 0.5sqrt(RT(R)) x (1 + dlog(T)/dlog(R))
+              if ( (i > 0) && (i < nr-1) ) {
+                dTdRp = InvDiffRmed[i+1]*((ADIABATICINDEX-1.0)*energy[l+ns]*pow(dens[l+ns],-1.0)-temp);
+                dTdRm = InvDiffRmed[i]*(temp-(ADIABATICINDEX-1.0)*energy[l-ns]*pow(dens[l-ns],-1.0));
+                dTdR  = 0.5*(dTdRp+dTdRm);
+              } else {
+              if (i==0)
+                dTdR = InvDiffRmed[i+1]*((ADIABATICINDEX-1.0)*energy[l+ns]*pow(dens[l+ns],-1.0)-temp);
+              if (i==nr-1)
+                dTdR = InvDiffRmed[i]*(temp-(ADIABATICINDEX-1.0)*energy[l-ns]*pow(dens[l-ns],-1.0));
+              }
+              costheta = 0.5*sqrt(Rmed[i]*temp)*(1.0 + Rmed[i]*dTdR/temp);
+              if (costheta > 1) {
+                //printf ("Issue with costheta calculation in substep3 as costheta = %lg\n",costheta);
+                //printf ("i = %d, tau_eff = %lg, shadow = %lg, costheta = %lg, temp = %lg, dTdT = %lg\n",i, tau_eff, shadow_function[j], costheta, temp, dTdR);
+                //prs_exit();
+                costheta = 1.0;
+              }
+              if (costheta < 0) {
+                //printf ("Issue with costheta calculation in substep3 as costheta = %lg\n",costheta);
+                //printf ("i = %d, tau_eff = %lg, shadow = %lg, costheta = %lg, temp = %lg, dTdT = %lg\n",i, tau_eff, shadow_function[j], costheta, temp, dTdR);
+                costheta = 0.0;
+              }
+              //costheta = 0.04;  // cuidadin!
+              costheta = 0.5*sqrt(Rmed[i]*temp)*(2.0*FLARINGINDEX);  // cuidadin!
+              // (iii) obtain equivalent irradiation temperature profile:
+              buf = 0.5*(tau_eff/sigma_SB)*(1.0-albedo)*(Lstar/4.0/M_PI/Rmed[i]/Rmed[i])*costheta;
+              temp_irr = pow(buf,0.25);
+              //
+              //printf("i = %d: tau_eff = %lg, costheta = %lg, buf = %lg, temp_irr = %lg, temp = %lg\n", i, tau_eff, costheta, buf, temp_irr, temp);
+              //if ((PhysicalTime != 0.0) && (i == nr-1))
+              //	prs_exit();
+              //
+              if (isnan(temp_irr) == 1) {
+                masterprint ("NaN issue with temp_irr calculation in substep 3\n");
+                masterprint ("buf = %lg, i = %d, tau_eff = %lg, costheta = %lg, temp = %lg\n",buf, i, tau_eff, costheta, temp*unit_temperature);
+                prs_exit();
+              }
+            }
+            
+            num = energy[l] + dt*(vischeat[l]*(ViscousHeating == YES ? 1 : 0) +	\
+                (2.0*sigma_SB/tau_eff)*(3.0*pow(temp,4.0) + pow(temp_irr,4.0)));
+          } 
+          else {  // If no stellar irradiation
+            num = energy[l] + dt*(vischeat[l]*(ViscousHeating == YES ? 1 : 0) +	\
+                (6.0*sigma_SB/tau_eff)*pow(temp,4.0));
+          }
+          den = 1.0+(ADIABATICINDEX-1.0)*dt*divergence[l]+		\
+            8.0*dt*(sigma_SB/tau_eff)*(ADIABATICINDEX-1.0)*pow(temp,3.0)*pow(dens[l],-1.0);
+          energynew[l] = num/den;
+        }
       }
-      if (StellarIrradiation && ImposedStellarLuminosity)
-	free(shadow_function);
     }
     /* Update (explicite) with heating due to dust feedback on gas
        (beta) */
     if (DustFeedback) {
       for (i = 0; i < nr; i++) {
-	for (j = 0; j < ns; j++) {
-	  l = j+i*ns;
-	  energynew[l] += fbedot[l]*dt;
-	}
+        for (j = 0; j < ns; j++) {
+          l = j+i*ns;
+          energynew[l] += fbedot[l]*dt;
+	      }
       }
     }
   }
@@ -1283,8 +1295,10 @@ int ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, deltaT)
   real *dustvr, *dustvt, *St, csd, ddvr, ddvt;
   real *soundspeed, *dsoundspeed, *temperature, *dens, *opacity;
   extern boolean Evanescent, DampToViscous;
+
   if (EnergyEquation && RadiativeDiffusion && !ImplicitRadiativeDiffusion)
      ComputeOpacities (Rho, Energy);
+
   opacity = Opacity->Field;
   soundspeed = SoundSpeed->Field;
   temperature = Temperature->Field;
@@ -1293,6 +1307,7 @@ int ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, deltaT)
   nr = Vtheta->Nrad;
   vt = Vtheta->Field;
   vr = Vrad->Field;
+
   if (DustFluid) {
     dustvt = DVtheta->Field;
     dustvr = DVrad->Field;
@@ -1315,8 +1330,8 @@ int ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, deltaT)
     if (DustFluid) {
       DVmoy[i] = 0.0;
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	DVmoy[i] += dustvt[l];
+        l = j+i*ns;
+        DVmoy[i] += dustvt[l];
       }
       DVmoy[i] /= (real)ns;
     }
@@ -1332,15 +1347,15 @@ int ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, deltaT)
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
       if (FastTransport == YES)
-	Vresidual[j] = vt[l]-Vmoy[i];  /* FARGO algorithm */
+	      Vresidual[j] = vt[l]-Vmoy[i];  /* FARGO algorithm */
       else
-	Vresidual[j] = vt[l];	       /* Standard algorithm */
+	      Vresidual[j] = vt[l];	       /* Standard algorithm */
        //
       if (DustFluid) {
-	if (FastTransport == YES)
-	  DVresidual[j] = dustvt[l]-DVmoy[i];  /* FARGO algorithm */
-	else
-	  DVresidual[j] = dustvt[l];	       /* Standard algorithm */
+        if (FastTransport == YES)
+          DVresidual[j] = dustvt[l]-DVmoy[i];  /* FARGO algorithm */
+        else
+          DVresidual[j] = dustvt[l];	       /* Standard algorithm */
       }
     }
     Vresidual[ns]=Vresidual[0];
@@ -1364,81 +1379,81 @@ int ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, deltaT)
       invdt4 = max2(dvr/dxrad,dvt/dxtheta);
       invdt4*= 4.0*CVNR*CVNR;
       if (viscosity != 0.0) 
-	invdt5 = viscosity*4.0/pow(min2(dxrad,dxtheta),2.0);
+	      invdt5 = viscosity*4.0/pow(min2(dxrad,dxtheta),2.0);
       else 
-	invdt5 = 1e-10;
+	      invdt5 = 1e-10;
       if (EnergyEquation && (EntropyDiffusion || (RadiativeDiffusion && !ImplicitRadiativeDiffusion))) {
-	if (EntropyDiffusion)
-	  invdt6 = DIFFUSIVITY*4.0/pow(min2(dxrad,dxtheta),2.0);
-	if (RadiativeDiffusion && !ImplicitRadiativeDiffusion) {
-	  gradT = sqrt(pow(InvDiffRmed[i+1]*(temperature[lip]-temperature[l]),2.0)+ pow(InvRmed[i]*invdphi*(temperature[ljp]-temperature[l]),2.0));
-	  Rl = (8.0*sqrt(ADIABATICINDEX*temperature[l])*pow(Rmed[i],1.5)/dens[l]/opacity[l])*gradT/temperature[l];
-	  if (Rl <= 2.0) {
-	    lambda = 2./(3.+sqrt(9.0+10.0*Rl*Rl));
-	  } else {
-	    lambda = 10./(10.*Rl+9.0+sqrt(180.*Rl+81.));
-	  }
-	  /* radiative diffusion coefficient at i,j (cell-centred) */
-	  chicoeff = 64.0*lambda*sigma_SB*ADIABATICINDEX*(ADIABATICINDEX-1.0)*pow(temperature[l],4.0)/opacity[l]/pow(dens[l],2.0)*pow(Rmed[i],3.0);
-	  invdt6 = chicoeff*4.0/pow(min2(dxrad,dxtheta),2.0);
-	  //invdt6 *= 2.0;  // extra precaution!
-	}
+        if (EntropyDiffusion)
+          invdt6 = DIFFUSIVITY*4.0/pow(min2(dxrad,dxtheta),2.0);
+        if (RadiativeDiffusion && !ImplicitRadiativeDiffusion) {
+          gradT = sqrt(pow(InvDiffRmed[i+1]*(temperature[lip]-temperature[l]),2.0)+ pow(InvRmed[i]*invdphi*(temperature[ljp]-temperature[l]),2.0));
+          Rl = (8.0*sqrt(ADIABATICINDEX*temperature[l])*pow(Rmed[i],1.5)/dens[l]/opacity[l])*gradT/temperature[l];
+          if (Rl <= 2.0) {
+            lambda = 2./(3.+sqrt(9.0+10.0*Rl*Rl));
+          } else {
+            lambda = 10./(10.*Rl+9.0+sqrt(180.*Rl+81.));
+          }
+          /* radiative diffusion coefficient at i,j (cell-centred) */
+          chicoeff = 64.0*lambda*sigma_SB*ADIABATICINDEX*(ADIABATICINDEX-1.0)*pow(temperature[l],4.0)/opacity[l]/pow(dens[l],2.0)*pow(Rmed[i],3.0);
+          invdt6 = chicoeff*4.0/pow(min2(dxrad,dxtheta),2.0);
+          //invdt6 *= 2.0;  // extra precaution!
+        }
       }
       else 
-	invdt6 = 1e-10;
+	      invdt6 = 1e-10;
       //
       if (DustFluid) {
-	csd = dsoundspeed[l];
-	if(!ShortFrictionTimeApproximation) {
-	  invdt7 = csd/(min2(dxrad,dxtheta));
-	  invdt8 = fabs(dustvr[l]+1e-15)/dxrad;
-	  invdt9 = fabs(DVresidual[j])/dxtheta;
-	  if(DustFeelDisk==NO) 
-	    invdt10 = 1.e-10;
-	  else
-	    invdt10 = 1./(St[l]+1.e-10)*sqrt(G*1.0/Rmed[i])/Rmed[i];
-	} else {
-	  invdt7=1.e-10;
-	  invdt8=1.e-10;
-	  invdt9=1.e-10;
-	  invdt10=1.e-10;
-	}
-	ddvr = dustvr[lip]-dustvr[l];
-	ddvt = dustvt[ljp]-dustvt[l];
-	if (ddvr >= 0.0) ddvr = 1e-10;
-	else ddvr = -ddvr;
-	if (ddvt >= 0.0) ddvt = 1e-10;
-	else ddvt = -ddvt;
-	invdt11 = max2(ddvr/dxrad,ddvt/dxtheta);
-	invdt11*= 4.0*CVNR*CVNR;
-	if (dviscosity != 0.0) 
-	  invdt12 = dviscosity*4.0/pow(min2(dxrad,dxtheta),2.0);
-	else 
-	  invdt12 = 1e-10;
+        csd = dsoundspeed[l];
+        if(!ShortFrictionTimeApproximation) {
+          invdt7 = csd/(min2(dxrad,dxtheta));
+          invdt8 = fabs(dustvr[l]+1e-15)/dxrad;
+          invdt9 = fabs(DVresidual[j])/dxtheta;
+          if(DustFeelDisk==NO) 
+            invdt10 = 1.e-10;
+          else
+            invdt10 = 1./(St[l]+1.e-10)*sqrt(G*1.0/Rmed[i])/Rmed[i];
+        } else {
+          invdt7=1.e-10;
+          invdt8=1.e-10;
+          invdt9=1.e-10;
+          invdt10=1.e-10;
+        }
+        ddvr = dustvr[lip]-dustvr[l];
+        ddvt = dustvt[ljp]-dustvt[l];
+        if (ddvr >= 0.0) ddvr = 1e-10;
+        else ddvr = -ddvr;
+        if (ddvt >= 0.0) ddvt = 1e-10;
+        else ddvt = -ddvt;
+        invdt11 = max2(ddvr/dxrad,ddvt/dxtheta);
+        invdt11*= 4.0*CVNR*CVNR;
+        if (dviscosity != 0.0) 
+          invdt12 = dviscosity*4.0/pow(min2(dxrad,dxtheta),2.0);
+        else 
+          invdt12 = 1e-10;
       }
       //
       if (DustFluid) {
-	dtg = CFLSECURITY/sqrt(invdt1*invdt1+invdt2*invdt2+invdt3*invdt3+invdt4*invdt4+invdt5*invdt5+invdt6*invdt6);
-	dtd = CFLSECURITY/sqrt(invdt7*invdt7+invdt8*invdt8+invdt9*invdt9+invdt10*invdt10+invdt11*invdt11+invdt12*invdt12);
-	dt=min2(dtg,dtd);
-	dt=max2(dt,1.e-10);
+        dtg = CFLSECURITY/sqrt(invdt1*invdt1+invdt2*invdt2+invdt3*invdt3+invdt4*invdt4+invdt5*invdt5+invdt6*invdt6);
+        dtd = CFLSECURITY/sqrt(invdt7*invdt7+invdt8*invdt8+invdt9*invdt9+invdt10*invdt10+invdt11*invdt11+invdt12*invdt12);
+        dt=min2(dtg,dtd);
+        dt=max2(dt,1.e-10);
       } else {
-	dt = CFLSECURITY/sqrt(invdt1*invdt1+invdt2*invdt2+invdt3*invdt3+invdt4*invdt4+invdt5*invdt5+invdt6*invdt6);
+	      dt = CFLSECURITY/sqrt(invdt1*invdt1+invdt2*invdt2+invdt3*invdt3+invdt4*invdt4+invdt5*invdt5+invdt6*invdt6);
       }
       if (dt < newdt) {
-	newdt = dt;
-	ideb = i;
+        newdt = dt;
+        ideb = i;
         jdeb = j;
-	if (debug == YES) {
-	  ideb = i;
-	  jdeb = j;
-	  itdbg1 = 1.0/invdt1; itdbg2=1.0/invdt2; itdbg3=1.0/invdt3; itdbg4=1.0/invdt4; itdbg5=1.0/invdt5; itdbg6=1.0/invdt6;
-	  if (DustFluid)
-	    itdbg7 = 1.0/invdt7; itdbg8=1.0/invdt8; itdbg9=1.0/invdt9; itdbg10=1.0/invdt10; itdbg11=1.0/invdt11; itdbg12=1.0/invdt12;
-	  mdtdbg = newdt;
-	  viscr = dxrad/dvr/4.0/CVNR/CVNR;     
-	  visct = dxtheta/dvt/4.0/CVNR/CVNR;
-	}
+        if (debug == YES) {
+          ideb = i;
+          jdeb = j;
+          itdbg1 = 1.0/invdt1; itdbg2=1.0/invdt2; itdbg3=1.0/invdt3; itdbg4=1.0/invdt4; itdbg5=1.0/invdt5; itdbg6=1.0/invdt6;
+          if (DustFluid)
+            itdbg7 = 1.0/invdt7; itdbg8=1.0/invdt8; itdbg9=1.0/invdt9; itdbg10=1.0/invdt10; itdbg11=1.0/invdt11; itdbg12=1.0/invdt12;
+          mdtdbg = newdt;
+          viscr = dxrad/dvr/4.0/CVNR/CVNR;     
+          visct = dxtheta/dvt/4.0/CVNR/CVNR;
+        }
       }  
     }
   }
@@ -1532,16 +1547,16 @@ void ComputeViscousHeating (Rho)
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
       if (viscosity != 0.0) {
-	/* Note that the factor 2 in front of Trp was originally
-	   missing in the online version of the code (that factor 2
-	   was also missing in D'Angelo+ 03...) */
-	vischeat[l] = 0.5/viscosity/dens[l]*( Trr[l]*Trr[l] +		\
-					      2.0*Trp[l]*Trp[l] +	\
-					      Tpp[l]*Tpp[l] );
-	vischeat[l] += (2.0/9.0)*viscosity*dens[l]*divergence[l]*divergence[l];
+        /* Note that the factor 2 in front of Trp was originally
+          missing in the online version of the code (that factor 2
+          was also missing in D'Angelo+ 03...) */
+        vischeat[l] = 0.5/viscosity/dens[l]*( Trr[l]*Trr[l] +		\
+                      2.0*Trp[l]*Trp[l] +	\
+                      Tpp[l]*Tpp[l] );
+        vischeat[l] += (2.0/9.0)*viscosity*dens[l]*divergence[l]*divergence[l];
       }
       else
-	vischeat[l] = 0.0;
+	      vischeat[l] = 0.0;
     }
   }
   /* We calculate the heating source term Vischeat for i=0 */
@@ -1582,70 +1597,78 @@ void ComputeOpacities (Rho, Energy)
   test = Test->Field;
   nr = Rho->Nrad;
   ns = Rho->Nsec;
+
   if (!SetConstantOpacity) {
+
     for (i = 0; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	/* Convert code temperature into Kelvins */
-	temp = (ADIABATICINDEX-1.0)*energ[l]*pow(dens[l],-1.0);  // temperature in code units
-	phys_temp = temp * unit_temperature;
-	/* Convert 3D volume density into g.cm^-3 */
-	roversigma = Rmed[i] / dens[l];
-	buf = ADIABATICINDEX*(ADIABATICINDEX-1.0)*energ[l]*pow(roversigma,3.);
-	rho3D = 0.5*pow(buf,-0.5);  // 3D density = sigma / 2H, in code units
-	phys_dens = rho3D * unit_mass * pow(unit_length, -3.);  // in kg.m^(-3)
-	phys_dens *= 1e-3;  // in g.cm^(-3)
-	/* Opacities are calculated in cm^2 / g from Bell and Lin (94)
-	   tables  */
-	if ( phys_temp < 167.0 )
-	  opacity[l] = 2e-4*pow(phys_temp,2.0);
-	else {
-	  if ( phys_temp < 203.0 )
-	    opacity[l] = 2e16*pow(phys_temp,-7.0);
-	  else {
-	    temp_transition_34 = pow(2e82*phys_dens,2./49);
-	    if ( phys_temp < temp_transition_34 ) 
-	      opacity[l] = 0.1*pow(phys_temp,0.5);
-	    else {
-	      temp_transition_45 = pow(2e89*pow(phys_dens,1./3),1./27);
-	      if ( phys_temp < temp_transition_45 )
-		opacity[l] = 2e81*pow(phys_dens,1.0)*pow(phys_temp,-24.);
-	      else {
-		temp_transition_56 = pow(1e28*pow(phys_dens,1./3),1./7);
-		if ( phys_temp < temp_transition_56 )
-		  opacity[l] = 1e-8*pow(phys_dens,2./3)*pow(phys_temp,3.);
-		else {
-		  temp_transition_67 = pow(1.5e56*pow(phys_dens,2./3),0.08);
-		  if ( phys_temp < temp_transition_67 )
-		    opacity[l] = 1e-36*pow(phys_dens,1./3)*pow(phys_temp,10.);
-		  else {
-		    temp_transition_78 = pow(4.31e20*phys_dens,2./5);
-		    if ( phys_temp < temp_transition_78 )
-		      opacity[l] = 1.5e20*pow(phys_dens,1.)*pow(phys_temp,-2.5);
-		    else
-		      opacity[l] = 0.348;
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-	opacity[l] *= FACTOROPACITIES;  // optional fudge factor (default = 1)
-	//test[l] = opacity[l];   // in cm^2 / g
-	/* We convert opacities them in m^2 / kg, before translating
-	   the result into code units */
-	opacity[l] *= (0.1 * pow(unit_length,-2.0) * pow(unit_mass,1.0));
+      	l = i*ns + j;
+
+        /* Convert code temperature into Kelvins */
+        temp = (ADIABATICINDEX-1.0)*energ[l]*pow(dens[l],-1.0);  // temperature in code units
+        phys_temp = temp * unit_temperature;
+
+        /* Convert 3D volume density into g.cm^-3 */
+        roversigma = Rmed[i] / dens[l];
+
+        buf = ADIABATICINDEX*(ADIABATICINDEX-1.0)*energ[l]*pow(roversigma,3.);
+        rho3D = 0.5*pow(buf,-0.5);  // 3D density = sigma / 2H, in code units
+
+        phys_dens = rho3D * unit_mass * pow(unit_length, -3.);  // in kg.m^(-3)
+        phys_dens *= 1e-3;  // in g.cm^(-3)
+        
+        /* Opacities are calculated in cm^2/g from Bell and Lin (94) tables  */
+        if ( phys_temp < 167.0 )
+          opacity[l] = 2e-4*pow(phys_temp,2.0);
+        else {
+          if ( phys_temp < 203.0 )
+            opacity[l] = 2e16*pow(phys_temp,-7.0);
+          else {
+            temp_transition_34 = pow(2e82*phys_dens,2./49);
+            if ( phys_temp < temp_transition_34 ) 
+              opacity[l] = 0.1*pow(phys_temp,0.5);
+            else {
+              temp_transition_45 = pow(2e89*pow(phys_dens,1./3),1./27);
+              if ( phys_temp < temp_transition_45 )
+               opacity[l] = 2e81*pow(phys_dens,1.0)*pow(phys_temp,-24.);
+              else {
+                temp_transition_56 = pow(1e28*pow(phys_dens,1./3),1./7);
+                if ( phys_temp < temp_transition_56 )
+                  opacity[l] = 1e-8*pow(phys_dens,2./3)*pow(phys_temp,3.);
+                else {
+                  temp_transition_67 = pow(1.5e56*pow(phys_dens,2./3),0.08);
+                  if ( phys_temp < temp_transition_67 )
+                    opacity[l] = 1e-36*pow(phys_dens,1./3)*pow(phys_temp,10.);
+                  else {
+                    temp_transition_78 = pow(4.31e20*phys_dens,2./5);
+                    if ( phys_temp < temp_transition_78 )
+                      opacity[l] = 1.5e20*pow(phys_dens,1.)*pow(phys_temp,-2.5);
+                    else
+                      opacity[l] = 0.348;
+                  }
+                }
+              }
+            }
+          }
+        }
+        opacity[l] *= FACTOROPACITIES;  // optional fudge factor (default = 1)
+        //test[l] = opacity[l];   // in cm^2 / g
+        /* We convert opacities them in m^2 / kg, before translating
+          the result into code units */
+        opacity[l] *= (0.1 * pow(unit_length,-2.0) * pow(unit_mass,1.0));
       }
     }
-  } else {
+  } 
+
+  else {
     /* Case where we impose a constant opacity throughout the grid */
     for (i = 0; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	opacity[l] = IMPOSEDCONSTANTOPACITY;  // in cm^2 / g
-	/* We convert opacities them in m^2 / kg, before translating
-	   the result into code units */
-	opacity[l] *= (0.1 * pow(unit_length,-2.0) * pow(unit_mass,1.0));
+        l = i*ns + j;
+        opacity[l] = IMPOSEDCONSTANTOPACITY;  // in cm^2 / g
+        /* We convert opacities them in m^2 / kg, before translating
+          the result into code units */
+        opacity[l] *= (0.1 * pow(unit_length,-2.0) * pow(unit_mass,1.0));
       }
     }
   }
@@ -1653,6 +1676,7 @@ void ComputeOpacities (Rho, Energy)
 
 /* old explicit update with thermal cooling, now changed to an
    implicit update directly in substep 3 */
+/*
 void ComputeThermalCooling (Rho, Energy)
      PolarGrid *Rho, *Energy;
 {
@@ -1675,15 +1699,16 @@ void ComputeThermalCooling (Rho, Energy)
       tau_eff = 0.375*tau + 0.25*sqrt(3.0) + 0.25/tau; // effective optical depth
       temp = (ADIABATICINDEX-1.0)*energ[l]*pow(dens[l],-1.0);  // temperature
       if (!StellarIrradiation)
-	thercool[l] = 2.0*sigma_SB*pow(temp,4.)*pow(tau_eff,-1.0);
+	      thercool[l] = 2.0*sigma_SB*pow(temp,4.)*pow(tau_eff,-1.0);
       else {
-	//temp_irr = pow(ASPECTRATIO,2.0)*pow(Rmed[i],-1.0+2.0*FLARINGINDEX);
-	temp_irr = (BACKGROUNDTEMPERATURE/unit_temperature) * pow(Rmed[i],SLOPEBACKGROUNDTEMPERATURE);   // BACKGROUNDTEMPERATURE is meant to be the gas temperature set by stellar irradiation at code's unit of length
-	thercool[l] = 2.0*sigma_SB*(pow(temp,4.)-pow(temp_irr,4.))*pow(tau_eff,-1.0);
+        //temp_irr = pow(ASPECTRATIO,2.0)*pow(Rmed[i],-1.0+2.0*FLARINGINDEX);
+        temp_irr = (BACKGROUNDTEMPERATURE/unit_temperature) * pow(Rmed[i],SLOPEBACKGROUNDTEMPERATURE);   // BACKGROUNDTEMPERATURE is meant to be the gas temperature set by stellar irradiation at code's unit of length
+        thercool[l] = 2.0*sigma_SB*(pow(temp,4.)-pow(temp_irr,4.))*pow(tau_eff,-1.0);
       }
     }
   }
 }
+*/
 
 
 void ComputeEntropyDiffusion (Rho, Energy)
@@ -1711,10 +1736,10 @@ void ComputeEntropyDiffusion (Rho, Energy)
       l = j+i*ns;
       buf = (ADIABATICINDEX-1.0)*energy[l]/pow(dens[l],ADIABATICINDEX);
       if (buf <= 0.0) {
-	tempint[l] = 0.0;
+	      tempint[l] = 0.0;
       } 
       if (buf > 0.0) {
-	tempint[l] = log( buf );
+	      tempint[l] = log( buf );
       }
     }
   }
@@ -1809,8 +1834,8 @@ Rossland opacity (our standard opacity) */
       KPhisup = 0.5*(kcoeff[l]+kcoeff[ljp]);
       KPhiinf = 0.5*(kcoeff[l]+kcoeff[ljm]);
       if ( (KRsup < 0) || (KRinf < 0) || (KPhisup < 0) || (KPhiinf < 0) ) {
-	printf ("Careful, one of the radiation diffusion coefficients is negative!\n");
-	printf ("i = %d: kcoeff_l = %lg, kcoeff_lip = %lg, kcoeff_lim = %lg\n",i,kcoeff[l],kcoeff[lip],kcoeff[lim]);
+        printf ("Careful, one of the radiation diffusion coefficients is negative!\n");
+        printf ("i = %d: kcoeff_l = %lg, kcoeff_lip = %lg, kcoeff_lim = %lg\n",i,kcoeff[l],kcoeff[lip],kcoeff[lim]);
       }
       /* divF is the divergence of the radiative flux */
       divF = InvDiffRsup[i]*InvRmed[i]*(
@@ -1911,8 +1936,8 @@ int SORsolver_RadiativeDiffusion (Rho, Energy, dt, omega)
       chiPhisup = 0.5*(chicoeff[l]+chicoeff[ljp]); // chi_{i,j+1/2}
       chiPhiinf = 0.5*(chicoeff[l]+chicoeff[ljm]); // chi_{i,j-1/2}
       if ( (chiRsup < 0) || (chiRinf < 0) || (chiPhisup < 0) || (chiPhiinf < 0) ) {
-	printf ("Careful, one of the radiation diffusion coefficients is negative in SOL solver!\n");
-	printf ("i = %d: chicoeff_l = %lg, chicoeff_lip = %lg, chicoeff_lim = %lg\n",i,chicoeff[l],chicoeff[lip],chicoeff[lim]);
+        printf ("Careful, one of the radiation diffusion coefficients is negative in SOL solver!\n");
+        printf ("i = %d: chicoeff_l = %lg, chicoeff_lip = %lg, chicoeff_lim = %lg\n",i,chicoeff[l],chicoeff[lip],chicoeff[lim]);
       }
       a[l] = -dt*Rsup[i]*InvDiffRsup[i]*chiRsup*InvRmed[i]*InvDiffRmed[i+1];
       b[l] = -dt*Rinf[i]*InvDiffRsup[i]*chiRinf*InvRmed[i]*InvDiffRmed[i];
@@ -1958,36 +1983,36 @@ int SORsolver_RadiativeDiffusion (Rho, Energy, dt, omega)
       if (ipass == 1) jchess = jchess1st;
       if (ipass == 2) jchess = jchess2nd;
       for (i = One_or_active; i < MaxMO_or_active; i++) {
-	for (j=jchess; j<ns; j+=2) {    // increment of 'j' index is 2
-	  l   = i*ns+j;
-	  lip = l+ns;
-	  lim = l-ns;
-	  ljp = l+1;
-	  if (j == ns-1) ljp = i*ns;
-	  ljm = l-1;
-	  if (j == 0) ljm = i*ns+ns-1;
-	  resid = a[l]*tempint[lip] + b[l]*tempint[lim] + c[l]*tempint[ljp] + d[l]*tempint[ljm] + e[l]*tempint[l] - f[l];
-	  norm_residual += fabs(resid);
-	  tempint[l] -= omega*resid/e[l];
-	}
-	jchess = 1 - jchess; // change the starting value of 'j' for the next increment of 'i'
-      }
-      if (CPU_Number > 1) SynchronizeOverlapFields (tempint, nr, 1);     // must update the 1st ring of each ghost zone neighbouring to the active mesh
-    }
-    MPI_Allreduce (&norm_residual, &bufmsg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    norm_residual = bufmsg;
-    //masterprint ("n = %d, norm_residual = %lg\n",n,norm_residual);
-    // Convergence criterion satisfied:
-    if (norm_residual < epsilonSOR*initial_norm_residual) {
-      // Now we need to communicate the temperature in the whole set of overlapping rings
-      // is that really needed??
-      if (CPU_Number > 1) SynchronizeOverlapFields (tempint, nr, CPUOVERLAP);
-      // Finally update thermal energy density
-      for (i = 0; i < nr; i++) {
-	for (j = 0; j < ns; j++) {
-	  l = j+i*ns;
-	  energy[l] = dens[l]*tempint[l] / (ADIABATICINDEX-1.0);
-	}
+        for (j=jchess; j<ns; j+=2) {    // increment of 'j' index is 2
+          l   = i*ns+j;
+          lip = l+ns;
+          lim = l-ns;
+          ljp = l+1;
+          if (j == ns-1) ljp = i*ns;
+          ljm = l-1;
+          if (j == 0) ljm = i*ns+ns-1;
+          resid = a[l]*tempint[lip] + b[l]*tempint[lim] + c[l]*tempint[ljp] + d[l]*tempint[ljm] + e[l]*tempint[l] - f[l];
+          norm_residual += fabs(resid);
+          tempint[l] -= omega*resid/e[l];
+        }
+        jchess = 1 - jchess; // change the starting value of 'j' for the next increment of 'i'
+            }
+            if (CPU_Number > 1) SynchronizeOverlapFields (tempint, nr, 1);     // must update the 1st ring of each ghost zone neighbouring to the active mesh
+          }
+          MPI_Allreduce (&norm_residual, &bufmsg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+          norm_residual = bufmsg;
+          //masterprint ("n = %d, norm_residual = %lg\n",n,norm_residual);
+          // Convergence criterion satisfied:
+          if (norm_residual < epsilonSOR*initial_norm_residual) {
+            // Now we need to communicate the temperature in the whole set of overlapping rings
+            // is that really needed??
+            if (CPU_Number > 1) SynchronizeOverlapFields (tempint, nr, CPUOVERLAP);
+            // Finally update thermal energy density
+            for (i = 0; i < nr; i++) {
+        for (j = 0; j < ns; j++) {
+          l = j+i*ns;
+          energy[l] = dens[l]*tempint[l] / (ADIABATICINDEX-1.0);
+        }
       }
       //masterprint("converged at n=%d as norm_residual = %lg, initial_norm_residual = %lg, ratio=%lg\n",n,norm_residual,initial_norm_residual,norm_residual/initial_norm_residual);
       return n; 
@@ -2288,9 +2313,9 @@ void ComputeSoundSpeed (Rho, Energy, sys)
     for ( j = 0; j < ns; j++ ) {
       l = i*ns + j;
       if (!EnergyEquation)
-	cs[l] = cs_buf; // since c_s only depends on radius there
+	      cs[l] = cs_buf; // since c_s only depends on radius there
       else
-	cs[l] = sqrt( ADIABATICINDEX*(ADIABATICINDEX-1.0)*energ[l]/dens[l] );
+	      cs[l] = sqrt( ADIABATICINDEX*(ADIABATICINDEX-1.0)*energ[l]/dens[l] );
     }
   }
 }
@@ -2344,16 +2369,16 @@ void ComputeDivergenceVelocity (RadialVelocity, AzimuthalVelocity, DRadialVeloci
 #pragma omp for nowait
     for (i = 0; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	lip = l+ns;
-	ljp = l+1;
-	if (j == ns-1) ljp = i*ns;
-	divergence[l]  = (vr[lip]*Rsup[i]-vr[l]*Rinf[i])*InvDiffRsup[i]*InvRmed[i];
-	divergence[l] += (vt[ljp]-vt[l])*invdphi*InvRmed[i];
-	if (DustFluid) {
-	  Ddivergence[l]  = (Dvr[lip]*Rsup[i]-Dvr[l]*Rinf[i])*InvDiffRsup[i]*InvRmed[i];
-	  Ddivergence[l] += (Dvt[ljp]-Dvt[l])*invdphi*InvRmed[i];
-	}
+        l = j+i*ns;
+        lip = l+ns;
+        ljp = l+1;
+        if (j == ns-1) ljp = i*ns;
+        divergence[l]  = (vr[lip]*Rsup[i]-vr[l]*Rinf[i])*InvDiffRsup[i]*InvRmed[i];
+        divergence[l] += (vt[ljp]-vt[l])*invdphi*InvRmed[i];
+        if (DustFluid) {
+          Ddivergence[l]  = (Dvr[lip]*Rsup[i]-Dvr[l]*Rinf[i])*InvDiffRsup[i]*InvRmed[i];
+          Ddivergence[l] += (Dvt[ljp]-Dvt[l])*invdphi*InvRmed[i];
+        }
       }
     }
   }
@@ -2376,12 +2401,12 @@ void ComputePressureField (Rho, Energy)
     for ( j = 0; j < ns; j++ ) {
       l = i*ns + j;
       if (!EnergyEquation) {
-	pres[l] = dens[l]*cs[l]*cs[l]; /* since SoundSpeed is not updated */
-                                       /* from initialization, cs remains */ 
-                                       /* axisymmetric */
+        pres[l] = dens[l]*cs[l]*cs[l]; /* since SoundSpeed is not updated */
+                                            /* from initialization, cs remains */ 
+                                            /* axisymmetric */
       }
       else
-	pres[l] = (ADIABATICINDEX-1.0)*energ[l];
+	      pres[l] = (ADIABATICINDEX-1.0)*energ[l];
     }
   }
 }
@@ -2401,9 +2426,9 @@ void ComputeTemperatureField (Rho, Energy)
     for ( j = 0; j < ns; j++ ) {
       l = i*ns + j;
       if (!EnergyEquation)
-	temp[l] = MU/R* pres[l]/dens[l];
+	      temp[l] = MU/R* pres[l]/dens[l];
       else
-	temp[l] = MU/R*(ADIABATICINDEX-1.0)*energ[l]/dens[l];
+	      temp[l] = MU/R*(ADIABATICINDEX-1.0)*energ[l]/dens[l];
     }
   }
 }
@@ -2450,6 +2475,7 @@ real CircumPlanetaryMass (Rho, sys)
   }
   return mdcptotal;
 }
+
 
 void AddFloorDensity (Rho) 
      PolarGrid *Rho;
@@ -2517,7 +2543,7 @@ void SFTAvelocity (Rho, Vrad, Vtheta, DRho, DVrad, DVtheta)
       l = j+i*ns;
       ts = St[l]/omega;
       if (DustFeedback)
-	ts *= (1.0+drho[l]/rho[l]);
+	      ts *= (1.0+drho[l]/rho[l]);
       lim = l-ns;
       ljm = l-1;
       if (j == 0) ljm = i*ns+ns-1;
@@ -2527,10 +2553,10 @@ void SFTAvelocity (Rho, Vrad, Vtheta, DRho, DVrad, DVtheta)
       /* dust radial velocity */
       /* -------------------- */
       if (i >= 1) {
-	//gradp = (cs[l]*cs[l]*rho[l]-cs[lim]*cs[lim]*rho[lim])*2.0/(rho[l]+rho[lim])*InvDiffRmed[i];
-	gradp_over_rho = (press[l]-press[lim])*2.0/(rho[l]+rho[lim])*InvDiffRmed[i];
-	//dvrad[l] = vrad[l]+1./sqrt(G*1.0/Rmed[i])*Rmed[i]*St[l]*(gradp+1e-15);
-	dvrad[l] = vrad[l] + ts*gradp_over_rho;
+        //gradp = (cs[l]*cs[l]*rho[l]-cs[lim]*cs[lim]*rho[lim])*2.0/(rho[l]+rho[lim])*InvDiffRmed[i];
+        gradp_over_rho = (press[l]-press[lim])*2.0/(rho[l]+rho[lim])*InvDiffRmed[i];
+        //dvrad[l] = vrad[l]+1./sqrt(G*1.0/Rmed[i])*Rmed[i]*St[l]*(gradp+1e-15);
+        dvrad[l] = vrad[l] + ts*gradp_over_rho;
       }
       /* ----------------------- */
       /* dust azimuthal velocity */

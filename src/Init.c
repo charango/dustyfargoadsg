@@ -193,8 +193,10 @@ void Initialization (gas_density, gas_v_rad, gas_v_theta, gas_energy, gas_label,
       ComputeEntropyDiffusion (gas_density, gas_energy);
     if (RadiativeDiffusion && !ImplicitRadiativeDiffusion)
       ComputeRadiativeDiffusion (gas_density, gas_energy);
+    /*
     if (ThermalCooling)
       ComputeThermalCooling (gas_density, gas_energy);
+    */
     ComputeViscousTerms (gas_v_rad, gas_v_theta, gas_density,dust_v_rad, dust_v_theta, dust_density);
     ComputeViscousHeating (gas_density);
     ReadfromFile (gas_label, "gaslabel", NbRestart);
