@@ -130,4 +130,4 @@ ReadPlanetFileAtRestart	No		# to restart a run with a pre-evolved planet
 Ntot		 	 4000			# NtotxDT/2Pi sets the total number of orbits (at R=1)
 Ninterm          20				# Ninterm*DT/2pi sets the time in orbits between outputs
 DT		 		 0.314159265358	# DT
-OutputDir        out1_nosirr			# Name of outputs directory (local)
+OutputDir        out1			# Name of outputs directory (local)
