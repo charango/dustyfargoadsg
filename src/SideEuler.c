@@ -251,62 +251,62 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
       if (KNOpen) {
-	/* Kley and Nelson (2008) prescription */
-	rho[l-ns] = rho[l]*Rmed[1]/Rmed[0];  /* copy first ring into ghost ring */
-	if (EnergyEquation)
-	  energy[l-ns] = energy[l]; // zero gradient for thermal energy
-	if ((vr[l+ns] > 0.0))
-	  vr[l] = 0.0; /* we just allow outflow [inwards] */
-	else {
-	  vri = -3.*FViscosity(Rmed[i])/Rmed[i]*3.*(-SIGMASLOPE+1.+2.*FLARINGINDEX); 
-	  if(fabs(vr[l+ns])>fabs(vri))
-	    vr[l]=vri;
-	  else
-	    vr[l]=vr[l+ns];
-	}
+        /* Kley and Nelson (2008) prescription */
+        rho[l-ns] = rho[l]*Rmed[1]/Rmed[0];  /* copy first ring into ghost ring */
+        if (EnergyEquation)
+          energy[l-ns] = energy[l]; // zero gradient for thermal energy
+        if ((vr[l+ns] > 0.0))
+          vr[l] = 0.0; /* we just allow outflow [inwards] */
+        else {
+          vri = -3.*FViscosity(Rmed[i])/Rmed[i]*3.*(-SIGMASLOPE+1.+2.*FLARINGINDEX); 
+          if(fabs(vr[l+ns])>fabs(vri))
+            vr[l]=vri;
+          else
+            vr[l]=vr[l+ns];
+        }
       } else {
-	/* Standard outflow prescription */
-	/*
-	if (ViscosityAlpha || (VISCOSITY != 0.0) ) // set nuxSigma uniform
-	  rho[l-ns] = rho[l] * FViscosity(Rmed[i]) / FViscosity(Rmed[i-1]);
-	  vr[l] = -1.5*FViscosity(Rinf[i])/Rinf[i];
-	else
-	  rho[l-ns] = rho[l] ;      // zero gradient for surface density
-	  vr[l] = 0.0;
-	*/
-	rho[l-ns]   = rho[l];      // zero gradient for surface density   // cuidadin
-	rho[l-2*ns] = rho[l];      // zero gradient for surface density   // cuidadin
-	if (EnergyEquation) {
-	  energy[l-ns]   = energy[l]; // zero gradient for thermal energy
-	  energy[l-2*ns] = energy[l]; // zero gradient for thermal energy
-	}
-	if (DontApplySubKeplerian) {
-	  vt[l-ns]   = vt[l] * sqrt(Rmed[i]/Rmed[i-1]);  // Keplerian extrapolation
-	  vt[l-2*ns] = vt[l] * sqrt(Rmed[i]/Rmed[i-2]);  // Keplerian extrapolation
-	}
-	// we just allow inflow
-	if ((vr[l+ns] >= 0.0) || (rho[l] < SigmaMed[0])) {
-	  vr[l]    = 0.0;
-	  vr[l-ns] = 0.0;
-	}
-	else {
-	  vr[l]    = vr[l+ns];
-	  vr[l-ns] = vr[l+ns];
-	}
-	/*
-	else { // openinner
-	  if ((vr[l+ns] >= 0.0) || (rho[l] < SigmaMed[0]))
-	    vr[l] = 0.0;            // vr set to zero when directed outward
-	  else
-	    vr[l] = vr[l+ns];       // vr extrapolated otherwise 
-	}
-	*/
+        /* Standard outflow prescription */
+        /*
+        if (ViscosityAlpha || (VISCOSITY != 0.0) ) // set nuxSigma uniform
+          rho[l-ns] = rho[l] * FViscosity(Rmed[i]) / FViscosity(Rmed[i-1]);
+          vr[l] = -1.5*FViscosity(Rinf[i])/Rinf[i];
+        else
+          rho[l-ns] = rho[l] ;      // zero gradient for surface density
+          vr[l] = 0.0;
+        */
+        rho[l-ns]   = rho[l];      // zero gradient for surface density   // cuidadin
+        rho[l-2*ns] = rho[l];      // zero gradient for surface density   // cuidadin
+        if (EnergyEquation) {
+          energy[l-ns]   = energy[l]; // zero gradient for thermal energy
+          energy[l-2*ns] = energy[l]; // zero gradient for thermal energy
+        }
+        if (DontApplySubKeplerian) {
+          vt[l-ns]   = vt[l] * sqrt(Rmed[i]/Rmed[i-1]);  // Keplerian extrapolation
+          vt[l-2*ns] = vt[l] * sqrt(Rmed[i]/Rmed[i-2]);  // Keplerian extrapolation
+        }
+        // we just allow inflow
+        if ((vr[l+ns] >= 0.0) || (rho[l] < SigmaMed[0])) {
+          vr[l]    = 0.0;
+          vr[l-ns] = 0.0;
+        }
+        else {
+          vr[l]    = vr[l+ns];
+          vr[l-ns] = vr[l+ns];
+        }
+        /*
+        else { // openinner
+          if ((vr[l+ns] >= 0.0) || (rho[l] < SigmaMed[0]))
+            vr[l] = 0.0;            // vr set to zero when directed outward
+          else
+            vr[l] = vr[l+ns];       // vr extrapolated otherwise 
+        }
+        */
       }
       if (CavityTorque) {
-	/* June 2022 */
-	rho[l-ns] = SigmaMed[0];
-	vt[l-ns]  = VthetaMed[0]-Rmed[0]*OmegaFrame;;
-	vr[l]     = VradMed[0];
+        /* June 2022 */
+        rho[l-ns] = SigmaMed[0];
+        vt[l-ns]  = VthetaMed[0]-Rmed[0]*OmegaFrame;;
+        vr[l]     = VradMed[0];
       }
     }
   }
@@ -320,38 +320,38 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
       if (ViscosityAlpha || (VISCOSITY != 0.0) )
-	rho[l] = rho[l-ns] * FViscosity(Rmed[i-1]) / FViscosity(Rmed[i]);
+	      rho[l] = rho[l-ns] * FViscosity(Rmed[i-1]) / FViscosity(Rmed[i]);
       else
-	rho[l] = rho[l-ns];	  // zero gradient for surface density
+	      rho[l] = rho[l-ns];	  // zero gradient for surface density
       if (EnergyEquation)
-	energy[l] = energy[l-ns]; // zero gradient for thermal energy
+	      energy[l] = energy[l-ns]; // zero gradient for thermal energy
       if (DontApplySubKeplerian)
-	vt[l] = vt[l-ns] * pow(Rmed[i]/Rmed[i-1],-0.5);
+	      vt[l] = vt[l-ns] * pow(Rmed[i]/Rmed[i-1],-0.5);
       if (KNOpen) {
-	if ((vr[l-ns] < 0.0))
-	  vr[l]  = 0.0; // we just allow outflow
-	else
-	  vr[l] = vr[l-ns];
+        if ((vr[l-ns] < 0.0))
+          vr[l]  = 0.0; // we just allow outflow
+        else
+          vr[l] = vr[l-ns];
       }
       else  {
-	/*
-	if (ViscosityAlpha || (VISCOSITY != 0.0) )
-	  vr[l] = -1.5*FViscosity(Rinf[i])/Rinf[i];
-	else
-	  vr[l] = 0.0;
-	*/
-	//vr[l] = vr[l-ns]; // CUIDADIN!!
-	// Below BC leads to oscillating behavior in vr... 
-	if ((vr[l-ns] < 0.0) || (rho[l] < SigmaMed[nr-2]))
-	  vr[l] = 0.0;            // vr set to zero when directed inward
-	else
-	  vr[l] = vr[l-ns];       // vr extrapolated otherwise 
+        /*
+        if (ViscosityAlpha || (VISCOSITY != 0.0) )
+          vr[l] = -1.5*FViscosity(Rinf[i])/Rinf[i];
+        else
+          vr[l] = 0.0;
+        */
+        //vr[l] = vr[l-ns]; // CUIDADIN!!
+        // Below BC leads to oscillating behavior in vr... 
+        if ((vr[l-ns] < 0.0) || (rho[l] < SigmaMed[nr-2]))
+          vr[l] = 0.0;            // vr set to zero when directed inward
+        else
+          vr[l] = vr[l-ns];       // vr extrapolated otherwise 
       }
       if (CavityTorque) {
-	/* June 2022  */
-	rho[l] = SigmaMed[i];
-	vt[l]  = VthetaMed[i]-Rmed[i]*OmegaFrame;
-	vr[l]  = VradMed[i];
+        /* June 2022  */
+        rho[l] = SigmaMed[i];
+        vt[l]  = VthetaMed[i]-Rmed[i]*OmegaFrame;
+        vr[l]  = VradMed[i];
       }
     }
   }
@@ -373,37 +373,27 @@ void OpenBoundaryd (DVrad, DVtheta, DRho)
   /* Inner Boundary Condition         */
   /* -------------------------------- */
   if (CPU_Rank == 0) {
-    i = 1;
+    i = 2;
 #pragma omp parallel for private(l)
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
-      if (KNOpen) {
-	/* Kley and Nelson (2008) prescription */
-	rho[l-ns] = rho[l]*Rmed[1]/Rmed[0];  /* copy first ring into ghost ring */
-	if ((vr[l+ns] > 0.0))
-	  vr[l] = 0.0; /* we just allow outflow [inwards] */
-	else {
-	  vri = -3.*FViscosity(Rmed[i])/Rmed[i]*3.*(-SIGMASLOPE+1.+2.*DFLARINGINDEX); 
-	  if(fabs(vr[l+ns])>fabs(vri))
-	    vr[l]=vri;
-	  else
-	    vr[l]=vr[l+ns];
-	}
-      } else {
-	/* Standard outflow prescription */
-	rho[l-ns] = rho[l] ;      // zero gradient for surface density
-	/* NEW (Sept 28 2011): if subkeplerian BC is not applied, then
-	   do power-law extrapolation */
-	if (DontApplySubKeplerian)
-	  vt[l-ns] = vt[l] * pow(Rmed[i-1]/Rmed[i],-0.5);
-	/*
-	if ((vr[l+ns] >= 0.0) || (rho[l] < DSigmaMed[0]))
-	  vr[l] = 0.0;            // vr set to zero when directed outward
-	else
-	  vr[l] = vr[l+ns];       // vr extrapolated otherwise 
-	*/
-	vr[l]    = vr[l+ns]; // CUIDADIN!
+      /* Standard outflow prescription */
+      rho[l-ns] = rho[l] ;      // zero gradient for surface density
+      rho[l-2*ns] = rho[l];      // zero gradient for surface density   // cuidadin
+      /* NEW (Sept 28 2011): if subkeplerian BC is not applied, then
+        do power-law extrapolation */
+      if (DontApplySubKeplerian) {
+        vt[l-ns] = vt[l] * pow(Rmed[i-1]/Rmed[i],-0.5);
+        vt[l-2*ns] = vt[l] * pow(Rmed[i-2]/Rmed[i],-0.5);
       }
+      /*
+      if ((vr[l+ns] >= 0.0) || (rho[l] < DSigmaMed[0]))
+        vr[l] = 0.0;            // vr set to zero when directed outward
+      else
+        vr[l] = vr[l+ns];       // vr extrapolated otherwise 
+      */
+      vr[l] = vr[l+ns]; // CUIDADIN!
+      vr[l-ns] = vr[l+ns]; // CUIDADIN!
     }
   }
   /* -------------------------------- */
@@ -417,94 +407,19 @@ void OpenBoundaryd (DVrad, DVtheta, DRho)
       rho[l] = rho[l-ns];	// zero gradient for surface density
       /* NEW (Sept 28 2011): if subkeplerian BC is not applied, then
 	   do power-law extrapolation */
-      if (DontApplySubKeplerian) {
-	vt[l] = vt[l-ns] * pow(Rmed[i]/Rmed[i-1],-0.5);
-      }
-      if (KNOpen) {
-	if ((vr[l-ns] < 0.0))
-	  vr[l]  = 0.0; // we just allow outflow [outwards]
-	else
-	  vr[l] = vr[l-ns];
-      }
-      else  {
-	/*
-	if ((vr[l-ns] < 0.0) || (rho[l] < DSigmaMed[nr-2]))
-	  vr[l] = 0.0;            // vr set to zero when directed inward
-	else
-	  vr[l] = vr[l-ns];       // vr extrapolated otherwise 
-	*/
-	vr[l] = vr[l-ns]; // CUIDADIN!
-      }
+      if (DontApplySubKeplerian)
+	      vt[l] = vt[l-ns] * pow(Rmed[i]/Rmed[i-1],-0.5);
+      /*
+      if ((vr[l-ns] < 0.0) || (rho[l] < DSigmaMed[nr-2]))
+        vr[l] = 0.0;            // vr set to zero when directed inward
+      else
+        vr[l] = vr[l-ns];       // vr extrapolated otherwise 
+      */
+	    vr[l] = vr[l-ns]; // CUIDADIN!
     }
   }
 }
 
-/*
-void OpenBoundaryd (Vrad, Vtheta, Rhog, Rhod)
-     PolarGrid *Vrad, *Vtheta, *Rhod, *Rhog;
-{
-  int i,j,l,ns, nr;
-  real *rho, *vr, *vt, *rhog, *ts, vri, tstop, ita;
-  extern boolean DustFeelDisk;
-  extern boolean DontApplySubKeplerian;
-  ns = Rhod->Nsec;
-  nr = Rhod->Nrad;
-  rho = Rhod->Field;
-  rhog = Rhog->Field;
-  vr  = Vrad->Field;
-  vt  = Vtheta->Field;
-  ts = Stokes->Field;
-  if(CPU_Rank == 0){
-   i = 1;
-#pragma omp parallel for private(l)
-   for (j = 0; j < ns; j++) {
-    l = j+i*ns;
-    rho[l-ns] = rho[l]*Rmed[1]/Rmed[0];         // copy first ring into ghost ring
-    if ((vr[l+ns] > 0.0)){
-// || (rho[l] < SigmaMed[0]))
-vr[l] = 0.0; // we just allow outflow [inwards]
-    }else{
-      if(NELSONBOUNDD){
-	if(DustFeelDisk){		// GasDcouple means it is dust and we should use dust drift speed
-	  tstop=ts[l];  // should be updated...
-	  ita=-(AspectRatio(Rmed[i]) * AspectRatio(Rmed[i]) * pow(Rmed[i], 2.*FLARINGINDEX))*(2.*FLARINGINDEX-1.0-SIGMASLOPE);
-          vri = 3.*(-FViscosity(Rmed[i])/Rmed[i]*3.*(-SIGMASLOPE+1.+2.*FLARINGINDEX)/tstop-ita*sqrt(G*1.0/Rmed[i]))/(tstop+1./tstop);
-          if(fabs(vr[l+ns])>fabs(vri))
-            vr[l]=vri;
-          else
-            vr[l]=vr[l+ns];
-        }else{
-	  vri = -3.*DFViscosity(Rmed[i])/Rmed[i]*3.*(-SIGMASLOPE+1.+2.*FLARINGINDEX);
-          if(fabs(vr[l+ns])>fabs(vri))
-            vr[l]=vri;
-          else
-            vr[l]=vr[l+ns];
-	}
-      }else{
-        vr[l] = vr[l+ns];
-      }
-    }
-    if (DontApplySubKeplerian)
-      vt[l-ns] = vt[l];
-   }
-  }
-  if (CPU_Rank == CPU_Highest){
-    i = nr-2;
-    for (j = 0; j < ns; j++) {
-      l = j+i*ns;
-      rho[l+ns]=rho[l] ;         // copy first ring into ghost ring
-      if ((vr[l] < 0.0))
-	// || (rho[l] < SigmaMed[nr-2]))
-	vr[l+ns] = 0.0; // we just allow outflow [outwards]
-      else
-	vr[l+ns] = vr[l];
-      if (DontApplySubKeplerian) {
-	vt[l] = vt[l-ns];
-      }
-    }
-  }
-}
-*/
 
 /* New BC developed by Sareh Ataiee for a disk with imposed,
    time-varying Mdot  */
@@ -1103,7 +1018,7 @@ void ApplySubKeplerianBoundary (Vtheta, DVtheta)
     for (j = 0; j < ns; j++) {
       vt[j] = VthetaMed[0]-Rmed[0]*OmegaFrame;
       if (DustFluid) {
-	dvt[j] = DVthetaMed[0]-Rmed[0]*OmegaFrame;
+	      dvt[j] = DVthetaMed[0]-Rmed[0]*OmegaFrame;
       }
     }
   }
@@ -1116,7 +1031,7 @@ void ApplySubKeplerianBoundary (Vtheta, DVtheta)
       l = i*ns + j;
       vt[l] = VthetaMed[i]-Rmed[i]*OmegaFrame;
       if (DustFluid) {
-	dvt[l] = DVthetaMed[i]-Rmed[i]*OmegaFrame;
+	      dvt[l] = DVthetaMed[i]-Rmed[i]*OmegaFrame;
       }
     }
   }
@@ -1146,9 +1061,9 @@ void ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, st
     NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys);
     if (DustFluid) {
       if (OpenInnerDust == YES)
-	OpenBoundaryd (DVrad, DVtheta, DRho);
+	      OpenBoundaryd (DVrad, DVtheta, DRho);
       else
-	EvanescentBoundaryDust (DVrad, DVtheta, DRho, step);
+	      EvanescentBoundaryDust (DVrad, DVtheta, DRho, step);
     }
   }
   if (Evanescent == YES) {

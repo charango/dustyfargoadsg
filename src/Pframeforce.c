@@ -300,27 +300,27 @@ void InitGasDensity (Rho)
     FillSigma ();
     for (i = 0; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	dens[l] = SigmaMed[i];
-	/* No random noise is added by default to the initial density
-	   and velocity profiles. If AddNoise set to yes, white noise
-	   added to the initial density field with arbitrary 1d-3
-	   relative amplitude */
-	if (AddNoise) {
-	  randomnb = 2.0*drand48()-1.0;
-	  dens[l] += 1e-3*SigmaMed[i]*randomnb;
-	}
-	if (AddM1) {
-	  dens[l] += 1e-3*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
-	}
-	if (AddM1Boosted) {
-	  dens[l] += 1e-1*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
-	}
-	if (AddM1toM10) {
-	  for (k=0; k<10; k++) {
-	    dens[l] += 1e-4*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos((k+1.0)*Azimuth[j]);
-	  }
-	}
+        l = j+i*ns;
+        dens[l] = SigmaMed[i];
+        /* No random noise is added by default to the initial density
+          and velocity profiles. If AddNoise set to yes, white noise
+          added to the initial density field with arbitrary 1d-3
+          relative amplitude */
+        if (AddNoise) {
+          randomnb = 2.0*drand48()-1.0;
+          dens[l] += 1e-3*SigmaMed[i]*randomnb;
+        }
+        if (AddM1) {
+          dens[l] += 1e-3*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
+        }
+        if (AddM1Boosted) {
+          dens[l] += 1e-1*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
+        }
+        if (AddM1toM10) {
+          for (k=0; k<10; k++) {
+            dens[l] += 1e-4*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos((k+1.0)*Azimuth[j]);
+          }
+        }
       }
     }
   } else {
@@ -349,19 +349,19 @@ void InitDustDensity (DRho)
 	 added to the initial density field with arbitrary 1d-3
 	 relative amplitude */
       if (AddNoise) {
-	randomnb = 2.0*drand48()-1.0;
-	dens[l] += 1e-3*DSigmaMed[i]*randomnb;
+        randomnb = 2.0*drand48()-1.0;
+        dens[l] += 1e-3*DSigmaMed[i]*randomnb;
       }
       if (AddM1) {
-	dens[l] += 1e-3*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
+	      dens[l] += 1e-3*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
       }
       if (AddM1Boosted) {
-	dens[l] += 1e-1*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
+	      dens[l] += 1e-1*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
       }
       if (AddM1toM10) {
-	for (k=0; k<10; k++) {
-	  dens[l] += 1e-4*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos((k+1.0)*Azimuth[j]);
-	}
+        for (k=0; k<10; k++) {
+          dens[l] += 1e-4*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos((k+1.0)*Azimuth[j]);
+        }
       }
     }
   }
@@ -468,11 +468,11 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
     /* Case with disc self-gravity */
     if ( SelfGravity ) { // Better test with CL rigid!
       if ( !SGZeroMode )
-	  mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
-      	else
-	  GLOBAL_AxiSGAccr = SG_Accr;
+	      mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
+      else
+	      GLOBAL_AxiSGAccr = SG_Accr;
       for (i = 1; i < GLOBALNRAD; i++)
-	vt_int[i] -= ( (Radii[i] - GlobalRmed[i-1])*GLOBAL_AxiSGAccr[i] + \
+	      vt_int[i] -= ( (Radii[i] - GlobalRmed[i-1])*GLOBAL_AxiSGAccr[i] + \
 		       (GlobalRmed[i] - Radii[i])*GLOBAL_AxiSGAccr[i-1] ) / (GlobalRmed[i]-GlobalRmed[i-1]);
     }
     for (i = 1; i < GLOBALNRAD; i++)
@@ -489,8 +489,8 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
     vt_cent[GLOBALNRAD] = vt_cent[GLOBALNRAD-1];
     for (i = 0; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vt[l] = vt_cent[i+IMIN];
+        l = i*ns + j;
+        vt[l] = vt_cent[i+IMIN];
       }
     }
   } else {
@@ -508,31 +508,31 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
 				pow(r,2.0*FLARINGINDEX)*		\
 				(1.+SIGMASLOPE-2.0*FLARINGINDEX) );
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	vt[l] = myvtheta;
+        l = j+i*ns;
+        vt[l] = myvtheta;
       }
     }
     if (SelfGravity) {
       if ( !SGZeroMode )
-	mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
+	      mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
       else
-	GLOBAL_AxiSGAccr = SG_Accr;
+	      GLOBAL_AxiSGAccr = SG_Accr;
       for (i = 0; i <= nr; i++) {
-	r = Rmed[i];
-	for (j = 0; j < ns; j++) {
-	  l = i*ns + j;
-	  vt2 = vt[l]*vt[l];
-	  /* recall that SG_Accr is centred in radius */
-	  vt2 -= r*GLOBAL_AxiSGAccr[i+IMIN];
-	  vt[l] = sqrt(vt2);
-	}
+        r = Rmed[i];
+        for (j = 0; j < ns; j++) {
+          l = i*ns + j;
+          vt2 = vt[l]*vt[l];
+          /* recall that SG_Accr is centred in radius */
+          vt2 -= r*GLOBAL_AxiSGAccr[i+IMIN];
+          vt[l] = sqrt(vt2);
+        }
       }
     }
     for (i = 0; i < nr; i++) {
       r = Rmed[i];
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vt[l] -= OmegaFrame*r;
+        l = i*ns + j;
+        vt[l] -= OmegaFrame*r;
       }
     }
   }
@@ -559,19 +559,19 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
     for (j = 0; j < ns; j++) {
       l = i*ns+j;
       if (i == nr)
-	vr[l] = 0.0;
+	      vr[l] = 0.0;
       else {
-	if (IMPOSEDDISKDRIFT != 0.0)
-	  vr[l] = IMPOSEDDISKDRIFT*SIGMA0/SigmaInf[i]/ri;
-	else {
-	  if (ViscosityAlpha) {
-	    vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+2.0*FLARINGINDEX+1.0);
-	  } else {
-	    vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+.5);
-	  }
-	}
-	if (CavityTorque)
-	  vr[l] = vr_over_cs*cs[l];  // takes negative values
+        if (IMPOSEDDISKDRIFT != 0.0)
+          vr[l] = IMPOSEDDISKDRIFT*SIGMA0/SigmaInf[i]/ri;
+        else {
+          if (ViscosityAlpha) {
+            vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+2.0*FLARINGINDEX+1.0);
+          } else {
+            vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+.5);
+          }
+        }
+        if (CavityTorque)
+          vr[l] = vr_over_cs*cs[l];  // takes negative values
       }
     }
   }
@@ -588,17 +588,17 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
       eta = -0.5*pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX)*(-1.-SIGMASLOPE+2.0*FLARINGINDEX);
       // note that GLOBAL_AxiSGAccr has already been computed above
       if (SelfGravity)
-	vk = sqrt(G*1.0/r - r*GLOBAL_AxiSGAccr[i+IMIN]);
+	      vk = sqrt(G*1.0/r - r*GLOBAL_AxiSGAccr[i+IMIN]);
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	// eps = dust-to-gas density ratio
-	eps = drho[l]/rho[l];
-	// gas radial velocity = -eps x dust radial velocity 
-	// CUIDADIN! note that centered quantities are used for now...
-	vr[l] = 2.0*eps*eta*vk*St[l] / ( St[l]*St[l] + pow(1.0+eps,2.0) );
-	// gas azimuthal velocity ~ vk (1-eta) - epsx(dust azimuthal velocity - vk)
-	vt[l] = vk*(1.0 - eta) + eps*eta*vk*(1.0+eps) / ( pow(St[l],2.0) + pow(1.0+eps,2.0) );
-	vt[l] -= OmegaFrame*r;
+        l = i*ns + j;
+        // eps = dust-to-gas density ratio
+        eps = drho[l]/rho[l];
+        // gas radial velocity = -eps x dust radial velocity 
+        // CUIDADIN! note that centered quantities are used for now...
+        vr[l] = 2.0*eps*eta*vk*St[l] / ( St[l]*St[l] + pow(1.0+eps,2.0) );
+        // gas azimuthal velocity ~ vk (1-eta) - epsx(dust azimuthal velocity - vk)
+        vt[l] = vk*(1.0 - eta) + eps*eta*vk*(1.0+eps) / ( pow(St[l],2.0) + pow(1.0+eps,2.0) );
+        vt[l] -= OmegaFrame*r;
       }
     }
   }
@@ -646,11 +646,11 @@ void InitDustVelocities (DVr, DVt, DRho, Rho)
     /* Case with disc self-gravity */
     if ( SelfGravity ) { // Better test with CL rigid!
       if ( !SGZeroMode )
-	  mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
-      	else
-	  GLOBAL_AxiSGAccr = SG_Accr;
+	      mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
+      else
+	      GLOBAL_AxiSGAccr = SG_Accr;
       for (i = 1; i < GLOBALNRAD; i++)
-	vt_int[i] -= ( (Radii[i] - GlobalRmed[i-1])*GLOBAL_AxiSGAccr[i] + \
+	      vt_int[i] -= ( (Radii[i] - GlobalRmed[i-1])*GLOBAL_AxiSGAccr[i] + \
 		       (GlobalRmed[i] - Radii[i])*GLOBAL_AxiSGAccr[i-1] ) / (GlobalRmed[i]-GlobalRmed[i-1]);
     }
     for (i = 1; i < GLOBALNRAD; i++)
@@ -667,8 +667,8 @@ void InitDustVelocities (DVr, DVt, DRho, Rho)
     vt_cent[GLOBALNRAD] = vt_cent[GLOBALNRAD-1];
     for (i = 0; i < nr; i++) {
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vt[l] = vt_cent[i+IMIN];
+        l = i*ns + j;
+        vt[l] = vt_cent[i+IMIN];
       }
     }
   } else {
@@ -686,31 +686,31 @@ void InitDustVelocities (DVr, DVt, DRho, Rho)
 				pow(r,2.0*DFLARINGINDEX)*		\
 				(1.+SIGMASLOPE-2.0*DFLARINGINDEX) );
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;
-	vt[l] = myvtheta;
+        l = j+i*ns;
+        vt[l] = myvtheta;
       }
     }
     if (SelfGravity) {
       if ( !SGZeroMode )
-	mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
+	      mpi_make1Dprofile (SG_Accr, GLOBAL_AxiSGAccr);
       else
-	GLOBAL_AxiSGAccr = SG_Accr;
+	      GLOBAL_AxiSGAccr = SG_Accr;
       for (i = 0; i <= nr; i++) {
-	r = Rmed[i];
-	for (j = 0; j < ns; j++) {
-	  l = i*ns + j;
-	  vt2 = vt[l]*vt[l];
-	  /* recall that SG_Accr is centred in radius */
-	  vt2 -= r*GLOBAL_AxiSGAccr[i+IMIN];
-	  vt[l] = sqrt(vt2);
-	}
+        r = Rmed[i];
+        for (j = 0; j < ns; j++) {
+          l = i*ns + j;
+          vt2 = vt[l]*vt[l];
+          /* recall that SG_Accr is centred in radius */
+          vt2 -= r*GLOBAL_AxiSGAccr[i+IMIN];
+          vt[l] = sqrt(vt2);
+        }
       }
     }
     for (i = 0; i < nr; i++) {
       r = Rmed[i];
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vt[l] -= OmegaFrame*r;
+        l = i*ns + j;
+        vt[l] -= OmegaFrame*r;
       }
     }
   }
@@ -735,14 +735,14 @@ void InitDustVelocities (DVr, DVt, DRho, Rho)
     for (j = 0; j < ns; j++) {
       l = i*ns+j;
       if (i == nr)
-	vr[l] = 0.0;
+	      vr[l] = 0.0;
       else {
-	vr[l] = IMPOSEDDISKDRIFT*SIGMA0/SigmaInf[i]/ri;
-	if (DViscosityAlpha) {
-	  vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+2.0*DFLARINGINDEX+1.0);
-	} else {
-	  vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+.5);
-	}
+	      vr[l] = IMPOSEDDISKDRIFT*SIGMA0/SigmaInf[i]/ri;
+        if (DViscosityAlpha) {
+          vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+2.0*DFLARINGINDEX+1.0);
+        } else {
+          vr[l] -= 3.0*viscosity/r*(-SIGMASLOPE+.5);
+        }
       }
     }
   }
@@ -758,16 +758,16 @@ void InitDustVelocities (DVr, DVt, DRho, Rho)
       eta = -0.5*pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX)*(-1.-SIGMASLOPE+2.0*FLARINGINDEX);
       // note that GLOBAL_AxiSGAccr has already been computed above...
       if (SelfGravity)
-	vk = sqrt(G*1.0/r - r*GLOBAL_AxiSGAccr[i+IMIN]);
+	      vk = sqrt(G*1.0/r - r*GLOBAL_AxiSGAccr[i+IMIN]);
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	// eps = dust-to-gas density ratio
-	eps = drho[l]/rho[l];
-	// radial dust velocity
-	vr[l] = -2.0*eta*vk / ( St[l] + pow(1.0+eps,2.0)/St[l] );
-	// azimuthal dust velocity
-	vt[l] = vk - eta*vk*(1.0+eps) / ( pow(St[l],2.0) + pow(1.0+eps,2.0) );
-	vt[l] -= OmegaFrame*r;
+        l = i*ns + j;
+        // eps = dust-to-gas density ratio
+        eps = drho[l]/rho[l];
+        // radial dust velocity
+        vr[l] = -2.0*eta*vk / ( St[l] + pow(1.0+eps,2.0)/St[l] );
+        // azimuthal dust velocity
+        vt[l] = vk - eta*vk*(1.0+eps) / ( pow(St[l],2.0) + pow(1.0+eps,2.0) );
+        vt[l] -= OmegaFrame*r;
       }
     }
   } else {
@@ -778,14 +778,14 @@ void InitDustVelocities (DVr, DVt, DRho, Rho)
       eta = -0.5*pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX)*(-1.-SIGMASLOPE+2.0*FLARINGINDEX);
       // note that GLOBAL_AxiSGAccr has already been computed above...
       if (SelfGravity)
-	vk = sqrt(G*1.0/r - r*GLOBAL_AxiSGAccr[i+IMIN]);
+        vk = sqrt(G*1.0/r - r*GLOBAL_AxiSGAccr[i+IMIN]);
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	// radial dust velocity
-	vr[l] = -2.0*eta*vk / ( St[l] + pow(St[l],-1.0) );
-	// azimuthal dust velocity
-	vt[l] = vk - eta*vk / ( pow(St[l],2.0) + 1.0);
-	vt[l] -= OmegaFrame*r;
+        l = i*ns + j;
+        // radial dust velocity
+        vr[l] = -2.0*eta*vk / ( St[l] + pow(St[l],-1.0) );
+        // azimuthal dust velocity
+        vt[l] = vk - eta*vk / ( pow(St[l],2.0) + 1.0);
+        vt[l] -= OmegaFrame*r;
       }
     }
   }
