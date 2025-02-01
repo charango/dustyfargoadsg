@@ -23,7 +23,8 @@ static PolarGrid *DDRR, *DDRP, *DDPP;
 real FViscosity (rad)
      real rad;
 {
-  real viscosity, rmin, rmax, scale, nudot, nuint, nuext;
+  real viscosity, rmin, rmax, scale, nudot, nuint, nuext, fdrop;
+  extern boolean TailOffSareh;
   int i = 0;
   viscosity = VISCOSITY;
   if (ViscosityAlpha) {
@@ -48,6 +49,11 @@ real FViscosity (rad)
     viscosity = nuint + (nuext-nuint)*log(rad/rmin)/log(rmax/rmin);
     */
   }
+  if (TailOffSareh) {
+    fdrop = 1.0/(1.0 + exp(-(rad-1.5)/0.1));
+    viscosity /= (fdrop + 0.01*(1.0-fdrop));
+  }
+
   /* Linear time variation of viscosity over time duration
      RELEASEDATEVISCOSITY between VISCOSITY and RELEASEVISCOSITY */
   if ( (!ViscosityAlpha) && (RELEASEDATEVISCOSITY > 1e-3) ) {

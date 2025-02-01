@@ -15,8 +15,8 @@ real Sigma(r)
 {
   real cavity = 1.0;
   real vr_over_cs, sigmabg;
-  real jump, width, F;
-  extern boolean TailOffGauss, TailOffIn, TailOffAurelien, TailOffStype, TailOffGI, ExponentialCutoff, CavityTorque;
+  real jump, width, F, fdrop;
+  extern boolean TailOffGauss, TailOffIn, TailOffAurelien, TailOffSareh, TailOffStype, TailOffGI, ExponentialCutoff, CavityTorque;
   if (r < CAVITYRADIUS) cavity = 1.0/CAVITYRATIO; 
   /* This is *not* a steady state */
   /* profile, if a cavity is defined. It first needs */
@@ -38,8 +38,12 @@ real Sigma(r)
   }
   if (TailOffAurelien) {
     /* July 2022 */
-    //sigmabg *= exp(-pow(r/4.0,8.0))*exp(-pow(r,-1.2));  // use SIGMA0 = 2.5e-3, SIGMASLOPE = 0.5
+   // sigmabg *= exp(-pow(r/4.0,8.0))*exp(-pow(r,-1.2));  // use SIGMA0 = 2.5e-3, SIGMASLOPE = 0.5
     sigmabg *= exp(-pow(r/4.0,8.0))*exp(-pow(r/1.5,-1.1));  // use SIGMA0 = 4.0e-3, SIGMASLOPE = 2.5
+  }
+  if (TailOffSareh) {
+    fdrop = 1.0/(1.0 + exp(-(r-1.5)/0.1));
+    sigmabg *= (fdrop + 0.01*(1.0-fdrop));
   }
   if (TailOffStype) {
     /* July 2023 */
