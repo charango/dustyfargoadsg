@@ -293,8 +293,8 @@ void UpdateLog (fc, psys, Rho, outputnb, time)
       sprintf (filename, "%stqwk%d.dat", OUTPUTDIR, i);
       out = fopen (filename, "a");
       if (out == NULL) {
-	fprintf (stderr, "Can't open %s\n", filename);
-	fprintf (stderr, "Aborted.\n");
+      	fprintf (stderr, "Can't open %s\n", filename);
+        fprintf (stderr, "Aborted.\n");
       }
       fprintf (out, "%d\t%.18g\t%.18g\t%.18g\t%.18g\t%.18g\t%.18g\t%.18g\t%.18g\t%.18g\n", outputnb, \
 	       x*fc->fy_inner-y*fc->fx_inner,				\
@@ -307,6 +307,19 @@ void UpdateLog (fc, psys, Rho, outputnb, time)
 	       vx*fc->fx_ex_outer+vy*fc->fy_ex_outer, time);
       fclose (out);
       //printf("disc torque at planet via summation = %lg (x=%lg, y=%lg, ax=%lg, ay=%lg)\n", x*fc->fy_inner-y*fc->fx_inner+x*fc->fy_outer-y*fc->fx_outer,x,y,fc->fx_inner+fc->fx_outer,fc->fy_inner+fc->fy_outer);
+      /* ---------------- */
+      /* April 2025: output indirect term*/
+      /* ---------------- */
+      sprintf (filename, "%sindtq%d.dat", OUTPUTDIR, i);
+      out = fopen (filename, "a");
+      if (out == NULL) {
+      	fprintf (stderr, "Can't open %s\n", filename);
+        fprintf (stderr, "Aborted.\n");
+      }
+      fprintf (out, "%d\t%.18g\t%.18g\n", outputnb, \
+        -x*DiskOnPrimaryAcceleration.y + y*DiskOnPrimaryAcceleration.x, time);
+      fclose (out);  
+      /* ---------------- */
     }
   }
 }
@@ -531,7 +544,7 @@ void CompareSGandSummationTorques (fc, Rho, psys)
       globalforce = fc->GlobalForce;
       torqueSumDisc[l] = x*fc->fy_inner-y*fc->fx_inner+x*fc->fy_outer-y*fc->fx_outer;
       if (SelfGravity) {
-	torqueSG[l] = r*azisgacc[l];
+      	torqueSG[l] = r*azisgacc[l];
       }
     }
   }
