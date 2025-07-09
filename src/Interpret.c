@@ -578,6 +578,8 @@ void TellEverything () {
   printf ("So the code will produce ~%.2f Mbytes of data\n", temp);
   printf ("Check (eg by issuing a 'df' command) that you have enough disk space,\n");
   printf ("otherwise you will get a system full and the code will stop.\n");
+  if (AddNoise == YES)
+    printf("Noise to add: %g\n", NOISEAMPLITUDE);
   fflush (stdout);
 }
 
