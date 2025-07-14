@@ -16,7 +16,7 @@ real Sigma(r)
   real cavity = 1.0;
   real vr_over_cs, sigmabg;
   real jump, width, F, fdrop;
-  extern boolean TailOffGauss, TailOffIn, TailOffAurelien, TailOffSareh, TailOffStype, TailOffGI, ExponentialCutoff, CavityTorque;
+  extern boolean TailOffGauss, TailOffIn, TailOffAurelien, TailOffDavid, TailOffSareh, TailOffStype, TailOffGI, ExponentialCutoff, CavityTorque;
   if (r < CAVITYRADIUS) cavity = 1.0/CAVITYRATIO; 
   /* This is *not* a steady state */
   /* profile, if a cavity is defined. It first needs */
@@ -40,6 +40,22 @@ real Sigma(r)
     /* July 2022 */
    // sigmabg *= exp(-pow(r/4.0,8.0))*exp(-pow(r,-1.2));  // use SIGMA0 = 2.5e-3, SIGMASLOPE = 0.5
     sigmabg *= exp(-pow(r/4.0,8.0))*exp(-pow(r/1.5,-1.1));  // use SIGMA0 = 4.0e-3, SIGMASLOPE = 2.5
+  }
+  if (TailOffDavid) {
+    /* July 2025 */
+    const real a = 3.0;
+    const real b = -1.5;
+    const real r0 = (TAILOFFDAVIDRMINVALUE-b)/a;
+    const real k = 0.04;
+    sigmabg *= exp(-pow(r/4.0,8.0))*exp(-pow(r/1.5,-1.1)) / 0.212;
+    sigmabg *= 1/(1+exp(-(r-r0)/k));
+    sigmabg += TAILOFFDAVIDRMINVALUE*SIGMA0/(1+exp((r-r0)/k));
+    // Values tested for Rmin = 0.4, SIGMA0 = 4e-3, Sigmaslope = 1.5
+    // Differences with TailOffAurelien:
+    //  - TailOffAurelien decreases the value of Sigma(r=1) at 0.212*Sigma0. Here this is corrected so that Sigma(r=1) = Sigma0 
+    //  - The value at the inner edge can be controlled with TAILOFFDAVIDRMINVALUE (between 0 and 1) :
+    // TAILOFFDAVIDRMINVALUE :  [0.1,         0.2,        0.3,          0.4,        0.5,          0.6,        0.7,         0.8]
+    // Sigma at Rmin=0.4 :      ['4.22e-04', '8.04e-04', '1.20e-03', '1.60e-03', '2.00e-03', '2.40e-03', '2.80e-03', '3.20e-03']
   }
   if (TailOffSareh) {
     fdrop = 1.0/(1.0 + exp(-(r-1.5)/0.1));

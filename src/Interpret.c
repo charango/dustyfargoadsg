@@ -41,7 +41,7 @@ boolean         DampToIni = NO, DampToAxi = YES, DampToViscous = NO;
 boolean         CorotateWithOuterPlanet = NO;
 boolean         DiscEvaporation = NO, ShortFrictionTimeApproximation = YES;
 boolean         CustomizedIT = NO, AddFloors = YES, AddM1 = NO, AddM1Boosted = NO, AddM1toM10 = NO, TailOffGauss = NO, ExponentialCutoff = NO;
-boolean         DustFeelDisk = YES, DustFeelSG = YES, DustFeelSGZeroMode = NO, DustFeelPlanets = YES, RestartWithNewDust = NO, DustFeelTurb = NO, TailOffIn = NO, TailOffAurelien = NO, TailOffStype = NO, TailOffGI = NO, TailOffSareh = NO, DustGrowth = NO;
+boolean         DustFeelDisk = YES, DustFeelSG = YES, DustFeelSGZeroMode = NO, DustFeelPlanets = YES, RestartWithNewDust = NO, DustFeelTurb = NO, TailOffIn = NO, TailOffAurelien = NO, TailOffDavid = NO, TailOffStype = NO, TailOffGI = NO, TailOffSareh = NO, DustGrowth = NO;
 boolean         ZZIntegrator = NO, NoTimestepConstraintByParticles = NO, PhotoEvaporation = NO, DecInner = NO, DustFeedback = NO, RemoveDustFromPlanetsHillRadius = YES;
 boolean         DustFluid = NO, DustDiffusion = NO, Write_StokesNumber = NO;
 boolean         BC1D_SS_ZeroVel = NO, BC1D_SS_NonZeroVel = NO, BC1D_ZeroDens = YES;
@@ -201,6 +201,11 @@ void ReadVariables(filename)
   }
   if ((*TAILOFF == 'A') || (*TAILOFF == 'a')) {
     TailOffAurelien = YES;
+    CentrifugalBalance = YES;
+    DontApplySubKeplerian = YES;
+  }
+  if ((*TAILOFF == 'D') || (*TAILOFF == 'd')) {
+    TailOffDavid = YES;
     CentrifugalBalance = YES;
     DontApplySubKeplerian = YES;
   }
@@ -580,6 +585,8 @@ void TellEverything () {
   printf ("otherwise you will get a system full and the code will stop.\n");
   if (AddNoise == YES)
     printf("Noise to add: %g\n", NOISEAMPLITUDE);
+  if (TailOffDavid == YES)
+    printf("TailOffDavid with %g\n", TAILOFFDAVIDRMINVALUE);
   fflush (stdout);
 }
 
