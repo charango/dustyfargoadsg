@@ -588,7 +588,9 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt);
 
       // added on July 2023 (Frederic's advise)
-      ApplyBoundaryCondition (VradInt, VthetaInt, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+      ActualiseGas (Vrad, VradInt);
+      ActualiseGas (Vtheta, VthetaInt);
+      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       
       /* Add some artifical viscosity */
       SubStep2 (Rho, Energy, DRho, dt);
