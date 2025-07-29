@@ -89,6 +89,7 @@ void ComputeForce (force, Rho, x, y, rsmoothing, mass, sys)
   real *fxi, *fxo, *fyi, *fyo;
   real *localforce, *globalforce;
   real *dens, *abs, *ord;
+  real *test;
   real cutoffdist, raddistfrompla;
   /* dimfxy is a global integer defined in global.h. It is set to 2
      (oct. 2014) */
@@ -99,6 +100,7 @@ void ComputeForce (force, Rho, x, y, rsmoothing, mass, sys)
   localforce = (real *) prs_malloc (sizeof(real) * 4 * dimfxy);
   globalforce = force->GlobalForce;
   ns = Rho->Nsec;
+  test = Test->Field;
   /* The trick below amounts to subtracting the azimuthally averaged
      density prior to the torque evaluation. This has no impact on the
      torque, but has on the angular speed of the planet and is
@@ -206,6 +208,7 @@ void ComputeForce (force, Rho, x, y, rsmoothing, mass, sys)
 #pragma omp atomic
 	  fyo[k] += G*cellmass*dy*InvDist3*hill_cut;
 	}
+      test[l] = G*cellmass*dy*InvDist3*hill_cut;
       }
     }
   }

@@ -129,13 +129,11 @@ char *filename;
 					    end of the calculation */
       // CB: March 2022 only apply MassTaper in calculation of disc
       // potential in PframeForce.c, like in Fargo3D
-      /*
       if (MASSTAPER > 1e-3)
-	massinvelocity = 0.0;
+	      massinvelocity = 0.0;
       else
-	massinvelocity = FinalPlanetMass[i];
-      */
-      massinvelocity = FinalPlanetMass[i];
+	      massinvelocity = FinalPlanetMass[i];
+      //massinvelocity = FinalPlanetMass[i];
       /* This is done only when MassTaper does not vanish for the
 	 first output of the planet's mass in the planet[i].dat
 	 files */

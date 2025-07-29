@@ -399,24 +399,23 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
 
     // CB: March 2022 only apply MassTaper in calculation of disc
     // potential in PframeForce.c, like in Fargo3D
-    /*
     if (MASSTAPER > 1e-2) {
       MassTaper = (PhysicalTime-PhysicalTimeInitial)/(MASSTAPER*2.0*M_PI);
       MassTaper = (MassTaper > 1.0 ? 1.0 : pow(sin(MassTaper*M_PI/2.0),2.0));
       if (MassTaper < 1.0) {
-	for (k = 0; k < NbPlanets; k++)
-	  sys->mass[k] = InitialPlanetMass[k] + (FinalPlanetMass[k]-InitialPlanetMass[k])*MassTaper;
-      }
+        for (k = 0; k < NbPlanets; k++)
+          sys->mass[k] = InitialPlanetMass[k] + (FinalPlanetMass[k]-InitialPlanetMass[k])*MassTaper;
+        }
       Particles_Mass = Particles_Mass_Initial*MassTaper;
-    } else {
+    } 
+    else {
       for (k = 0; k < NbPlanets; k++) {
-	// if no accretion, otherwise let the planet grow!
-	if (sys->acc[k] < 1e-10)
-	  sys->mass[k] = FinalPlanetMass[k];
+        // if no accretion, otherwise let the planet grow!
+        if (sys->acc[k] < 1e-10)
+          sys->mass[k] = FinalPlanetMass[k];
       }
       Particles_Mass = Particles_Mass_Initial;
     }
-    */
 
     /* The current planet masses at t=PhysicalTime */
     if (NbPlanets > 1) {
@@ -588,7 +587,9 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt);
 
       // added on July 2023 (Frederic's advise)
-      ApplyBoundaryCondition (VradInt, VthetaInt, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+      ActualiseGas (Vrad, VradInt);
+      ActualiseGas (Vtheta, VthetaInt);
+      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       
       /* Add some artifical viscosity */
       SubStep2 (Rho, Energy, DRho, dt);
@@ -1087,8 +1088,10 @@ void SubStep2 (Rho, Energy, DRho, dt)
           energyint[l] = energy[l] -				\
             dt*qr[l]*(vrad[lip]-vrad[l])*InvDiffRsup[i] -		\
             dt*qt[l]*(vtheta[ljp]-vtheta[l])*invdxtheta;
+          /*
           test[l] = -qr[l]*(vrad[lip]-vrad[l])*InvDiffRsup[i] -	\
             qt[l]*(vtheta[ljp]-vtheta[l])*invdxtheta;
+          */
         }
       }
     }

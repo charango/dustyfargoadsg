@@ -87,7 +87,7 @@ void FillForcesArrays (sys)
 	distancesmooth = sqrt(distance+smooth);
 	pot = -G*mplanet/distancesmooth; /* Direct term from planet */
 	if (Indirect_Term == YES) {
-	  pot += G*mplanet*InvPlanetDistance3*(x*xplanet+y*yplanet); /* Indirect term from planet  */
+	  pot += G*mplanet*InvPlanetDistance3*(x*xplanet+y*yplanet); /* Indirect term from planet on disc */
 	  if (DustFeelPlanets)
 	    IndPot[l] = G*mplanet*InvPlanetDistance3*(x*xplanet+y*yplanet);
 	}
@@ -106,7 +106,7 @@ void FillForcesArrays (sys)
       pot = -G*1.0*InvDistance;  /* Direct term from star */
       /* case where azimuthal extent equals 2pi */
       if ( (!Discard_GasIndirect_term) && (fabs(PMAX-PMIN-2.*M_PI) < 0.01) ) {
-	pot -= IndirectTerm.x*x + IndirectTerm.y*y; /* Indirect term from gas on gas */
+	pot -= IndirectTerm.x*x + IndirectTerm.y*y; /* Indirect term from disc on disc */
 	if (DustFeelDisk)
 	  IndPot[l] -= IndirectTerm.x*x + IndirectTerm.y*y;
 	//test[l] = IndPot[l];
@@ -434,6 +434,7 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
   extern boolean SGZeroMode;
   extern boolean SelfGravity;
   extern boolean CavityTorque;
+  extern boolean TailOffSareh;
   int i, j, l, nr, ns;
   real *vr, *vt, *pres, *cs;
   real *rho, *drho, *St;
@@ -572,6 +573,10 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
         }
         if (CavityTorque)
           vr[l] = vr_over_cs*cs[l];  // takes negative values
+        /*
+        if (TailOffSareh)
+          vr[l] = 0.0;
+        */
       }
     }
   }

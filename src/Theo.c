@@ -163,9 +163,8 @@ real Energy(r)
   }
   else {
     energy0 = R/MU/(ADIABATICINDEX-1.0)*Sigma(r)*pow(ASPECTRATIO,2.0)*pow(r,-1.0+2.0*FLARINGINDEX);
-    //energy0 = R/MU/(ADIABATICINDEX-1.0)*SIGMA0*pow(ASPECTRATIO,2.0)*pow(r,-SIGMASLOPE-1.0+2.0*FLARINGINDEX);
   }
-  if (r < CAVITYRADIUS) cavity = 1.0/CAVITYRATIO; 
+  //if (r < CAVITYRADIUS) cavity = 1.0/CAVITYRATIO; 
   return cavity*ScalingFactor*energy0;
 }
 

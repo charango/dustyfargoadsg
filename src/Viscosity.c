@@ -52,6 +52,7 @@ real FViscosity (rad)
   if (TailOffSareh) {
     fdrop = 1.0/(1.0 + exp(-(rad-1.5)/0.1));
     viscosity /= (fdrop + 0.01*(1.0-fdrop));
+    //viscosity *= pow(rad,SIGMASLOPE-1.0-2.0*FLARINGINDEX);
   }
 
   /* Linear time variation of viscosity over time duration

@@ -14,6 +14,7 @@ void ApplyLSAOnPotential ()
 {
   int i, j, l, k, nr, ns;
   real ampl, x1, x2, w, gamma, r, angle, mygamma, rmin, rmax;
+  real m_min, m_max;
   real *Pot, *TurbPot;
   FILE *fich;
   extern boolean HighMCutoff;
@@ -29,31 +30,44 @@ void ApplyLSAOnPotential ()
   if (CPU_Rank == CPU_Highest) {
     for (k = 0; k < NBTURBMODES; k++) {
       if (PhysicalTime >= tf[k]) {
-	/* We sort the logarithm of the wavenumber m uniformly between
-	   log(1) and log(Nsec/8) */
+        /* We sort the logarithm of the wavenumber m uniformly between
+          log(1) and log(Nsec/8) */
 
-	// CB: improve by specifying m_min and m_max. m_min should be
-	// set by the grid's azimuthal extent PMAX-PMIN, and m_max by
-	// the minimum length scale that should be resolved, like for
-	// instance H.
+        // CB: improve by specifying m_min and m_max. m_min should be
+        // set by the grid's azimuthal extent PMAX-PMIN, and m_max by
+        // the minimum length scale that should be resolved, like for
+        // instance H.
+            
+        //m[k] = (long)exp(log((real)ns/8.0)*drand48());
+        //
+        // May 2025: testing uniform probability distribution between m=1 
+        // and m=Nsec/8 to put more weight in small scale modes
+        //
+        //m_min = 1.0;
+        //m_max = (real)ns/8.0;
+        //m[k] = (long)(m_min + (m_max-m_min)*drand48());
+        // 
+        // m^2 sorted uniformly between m_min and m_max
+        m_min = 2.0;
+        m_max = (real)ns/2.0;
+        m[k] = (long)sqrt(m_min*m_min + (m_max*m_max-m_min*m_min)*drand48());
       
-	m[k] = (long)exp(log((real)ns/8.0)*drand48());
-	/* We sort rc uniformly throughout the grid except in the
-	 wave-killing zones; TURBRMIN AND TURBRMAX are the radial 
-	 boundaries where stochastic forcing is applied in the disc. */
-	rc[k] = TURBRMIN + (TURBRMAX-TURBRMIN)*drand48();
-	/* PMIN AND PMAX the min and max azimuths in the computational
-	   grid (default: 0 and 2pi) */
-	phic[k] = (PMAX-PMIN)*drand48();
-	/* Parameter xi is sorted with a gaussian distribution of mean
-	   0 and standard deviation unity */
-	do {
-	  x1 = 2.0*drand48()-1.0;
-	  x2 = 2.0*drand48()-1.0;
-	  w = x1*x1 + x2*x2;
-	} while ( w >= 1.0);
-	w = sqrt( (-2.0 * log(w)) / w );
-	xi[k] = x1*w;
+        /* We sort rc uniformly throughout the grid except in the
+        wave-killing zones; TURBRMIN AND TURBRMAX are the radial 
+        boundaries where stochastic forcing is applied in the disc. */
+        rc[k] = TURBRMIN + (TURBRMAX-TURBRMIN)*drand48();
+        /* PMIN AND PMAX the min and max azimuths in the computational
+          grid (default: 0 and 2pi) */
+        phic[k] = (PMAX-PMIN)*drand48();
+        /* Parameter xi is sorted with a gaussian distribution of mean
+          0 and standard deviation unity */
+        do {
+          x1 = 2.0*drand48()-1.0;
+          x2 = 2.0*drand48()-1.0;
+          w = x1*x1 + x2*x2;
+        } while ( w >= 1.0);
+        w = sqrt( (-2.0 * log(w)) / w );
+        xi[k] = x1*w;
       }
     }
   }
@@ -75,7 +89,9 @@ void ApplyLSAOnPotential ()
       omegac[k] = pow(rc[k],-1.5);
       sigma[k] = M_PI*rc[k]/4.0/(real)m[k];
       /* This expression of deltat uses the isothermal sound speed */
-      deltat[k] = LSAMODESPEEDUP*2.0*M_PI*rc[k]/(real)m[k]/ASPECTRATIO/pow(rc[k],-0.5+FLARINGINDEX);
+      //deltat[k] = LSAMODESPEEDUP*2.0*M_PI*rc[k]/(real)m[k]/ASPECTRATIO/pow(rc[k],-0.5+FLARINGINDEX);
+      // Test below: decrease lifetime of high-m modes even more
+      deltat[k] = LSAMODESPEEDUP*2.0*M_PI*rc[k]/(real)m[k]/sqrt((real)m[k])/ASPECTRATIO/pow(rc[k],-0.5+FLARINGINDEX);
       /* Modes lifetime multiplied by a factor LSAMODESPEEDUP compared with LSA 04 */
       t0[k] = PhysicalTime;         // time at which a mode becomes active
       tf[k] = t0[k] + deltat[k];    // time at which a mode becomes inactive
@@ -83,11 +99,11 @@ void ApplyLSAOnPotential ()
       // should be written at same frequency as gas*.dat files also,
       // the restart case should be worked out
       if (CPU_Rank == CPU_Highest) {
-	sprintf (filename, "%sturb.dat", OUTPUTDIR);
-	fich = fopen(filename, "a");
-	fprintf(fich,"%d\t%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n", k, m[k], rc[k], deltat[k], t0[k], tf[k], phic[k], xi[k], PhysicalTime);
-	fclose(fich);
-      }
+        sprintf (filename, "%sturb.dat", OUTPUTDIR);
+        fich = fopen(filename, "a");
+        fprintf(fich,"%d\t%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n", k, m[k], rc[k], deltat[k], t0[k], tf[k], phic[k], xi[k], PhysicalTime);
+        fclose(fich);
+            }
       */
     }
     ttilde[k] = PhysicalTime-t0[k];
@@ -97,22 +113,22 @@ void ApplyLSAOnPotential ()
     if ( (m[k] <= 6) || (!HighMCutoff) ) {
       /* If HighMCutoff is set to yes, modes with azimuthal wavenumber m>6 are discarded */
       for (i = 0; i < nr; i++) {
-	r = Rmed[i];
-	/* Heaviside function for gamma coefficient */
-	if (r < rmin) mygamma = gamma*CAVITYRATIO;  // !default: cavityratio=1
-	if ((r >= rmin) && (r <= rmax)) {
-	  mygamma = gamma*exp((rmax-r)/(rmax-rmin)*log(CAVITYRATIO));
-	}
-	if (r > rmax) mygamma = gamma;
-	ampl = mygamma/r*xi[k]*					\
-	  exp( -(r-rc[k])*(r-rc[k])/sigma[k]/sigma[k] )*	\
-	  sin( M_PI*ttilde[k]/deltat[k] );
-	for (j = 0; j < ns; j++) {
-	  angle = Azimuth[j];
-	  l = j+i*ns;
-	  TurbPot[l] += ampl*cos( m[k]*angle-phic[k]-(omegac[k]-OmegaFrame)*ttilde[k] );
-	  Pot[l] += ampl*cos( m[k]*angle-phic[k]-(omegac[k]-OmegaFrame)*ttilde[k] );
-	}
+        r = Rmed[i];
+        /* Heaviside function for gamma coefficient */
+        if (r < rmin) mygamma = gamma*CAVITYRATIO;  // !default: cavityratio=1
+        if ((r >= rmin) && (r <= rmax)) {
+          mygamma = gamma*exp((rmax-r)/(rmax-rmin)*log(CAVITYRATIO));
+        }
+        if (r > rmax) mygamma = gamma;
+        ampl = mygamma/r*xi[k]*					\
+          exp( -(r-rc[k])*(r-rc[k])/sigma[k]/sigma[k] )*	\
+          sin( M_PI*ttilde[k]/deltat[k] );
+        for (j = 0; j < ns; j++) {
+          angle = Azimuth[j];
+          l = j+i*ns;
+          TurbPot[l] += ampl*cos( m[k]*angle-phic[k]-(omegac[k]-OmegaFrame)*ttilde[k] );
+          Pot[l] += ampl*cos( m[k]*angle-phic[k]-(omegac[k]-OmegaFrame)*ttilde[k] );
+        }
       }
     }
   }

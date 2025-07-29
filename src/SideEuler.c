@@ -319,10 +319,13 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
 #pragma omp parallel for private(l)
     for (j = 0; j < ns; j++) {
       l = j+i*ns;
+      /*
       if (ViscosityAlpha || (VISCOSITY != 0.0) )
 	      rho[l] = rho[l-ns] * FViscosity(Rmed[i-1]) / FViscosity(Rmed[i]);
       else
 	      rho[l] = rho[l-ns];	  // zero gradient for surface density
+      */
+      rho[l] = rho[l-ns];
       if (EnergyEquation)
 	      energy[l] = energy[l-ns]; // zero gradient for thermal energy
       if (DontApplySubKeplerian)
