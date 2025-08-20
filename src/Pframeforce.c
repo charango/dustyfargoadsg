@@ -305,10 +305,10 @@ void InitGasDensity (Rho)
         /* No random noise is added by default to the initial density
           and velocity profiles. If AddNoise set to yes, white noise
           added to the initial density field with arbitrary 1d-3
-          relative amplitude */
+          relative amplitude by default. This value can be changed with NOISEAMPLITUDE */
         if (AddNoise) {
           randomnb = 2.0*drand48()-1.0;
-          dens[l] += 1e-3*SigmaMed[i]*randomnb;
+          dens[l] += NOISEAMPLITUDE*SigmaMed[i]*randomnb;
         }
         if (AddM1) {
           dens[l] += 1e-3*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
@@ -345,12 +345,12 @@ void InitDustDensity (DRho)
       l = j+i*ns;
       dens[l] = DSigmaMed[i];
       /* No random noise is added by default to the initial density
-	 and velocity profiles. If AddNoise set to yes, white noise
-	 added to the initial density field with arbitrary 1d-3
-	 relative amplitude */
+        and velocity profiles. If AddNoise set to yes, white noise
+        added to the initial density field with arbitrary 1d-3
+        relative amplitude by default. This value can be changed with NOISEAMPLITUDE */
       if (AddNoise) {
         randomnb = 2.0*drand48()-1.0;
-        dens[l] += 1e-3*DSigmaMed[i]*randomnb;
+        dens[l] += NOISEAMPLITUDE*DSigmaMed[i]*randomnb;
       }
       if (AddM1) {
 	      dens[l] += 1e-3*DSigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
