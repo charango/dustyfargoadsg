@@ -586,21 +586,36 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
 	    source terms */
       SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt);
 
-      // added on July 2023 (Frederic's advise)
+      // Modified sept 2025
       ActualiseGas (Vrad, VradInt);
       ActualiseGas (Vtheta, VthetaInt);
+      if (DustFluid && (!ShortFrictionTimeApproximation)) {
+        ActualiseGas (DVrad, DVradInt);
+        ActualiseGas (DVtheta, DVthetaInt);
+      }
+      //
       ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
-      
-      /* Add some artifical viscosity */
+      //
+      ActualiseGas (VradInt, Vrad);
+      ActualiseGas (VthetaInt, Vtheta);
+      if (DustFluid && (!ShortFrictionTimeApproximation)) {
+        ActualiseGas (DVradInt, DVrad);
+        ActualiseGas (DVthetaInt, DVtheta);
+      }
+
+      /* Add artifical viscosity */
       SubStep2 (Rho, Energy, DRho, dt);
 
       ActualiseGas (Vrad, VradNew);
       ActualiseGas (Vtheta, VthetaNew);
+      if (EnergyEquation)
+        ActualiseGas (Energy, EnergyInt);
 
       if (DustFluid && (!ShortFrictionTimeApproximation)) {
         ActualiseGas (DVrad, DVradNew);    /* actualize dust vrad and vtheta */
         ActualiseGas (DVtheta, DVthetaNew);
       }
+
       if (DustFluid && ShortFrictionTimeApproximation) {
 	      ActualiseGas (DVrad, DVradInt);    /* actualize dust vrad and vtheta */
         ActualiseGas (DVtheta, DVthetaInt);
@@ -613,18 +628,15 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       if (EnergyEquation) {
 	      // CB: March 2022: added (Frederic's advise)
 	      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+        ActualiseGas (EnergyInt, Energy);
 	
         /* Update thermal energy with heating, cooling source terms */
         if (ViscousHeating) {
           ComputeViscousTerms (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho);
           ComputeViscousHeating (Rho);
         }
-        // CB (Dec 2017): function ComputeThermalCooling is no longer 
-        // used (see substep 3, an implicit solver is used there)
-        /*
-        if (ThermalCooling)
-          ComputeThermalCooling (Rho, Energy);
-        */
+        
+        /* call to substep 3*/
         SubStep3 (Rho, Vtheta, dt);
         ActualiseGas (Energy, EnergyNew);
       }
