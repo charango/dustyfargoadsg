@@ -242,7 +242,7 @@ real GetPsysInfo (sys, action)
   real x0, x1, y0, y1, vx0, vx1, vy0, vy1, m0, m1;
   real arg, PerihelionPA;
   real ri, rip1, dr, sgacc;
-  int ipl;
+  int ipl, nb;
   if (!CorotateWithOuterPlanet) {
     xc = x = sys->x[0];
     yc = y = sys->y[0];
@@ -250,11 +250,12 @@ real GetPsysInfo (sys, action)
     vyc = vy= sys->vy[0];
     m = sys->mass[0]+1.;
   } else {
-    xc = x = sys->x[1];
-    yc = y = sys->y[1];
-    vxc = vx= sys->vx[1];
-    vyc = vy= sys->vy[1];
-    m = sys->mass[1]+1.;
+    nb = sys->nb;
+    xc = x = sys->x[nb-1];
+    yc = y = sys->y[nb-1];
+    vxc = vx= sys->vx[nb-1];
+    vyc = vy= sys->vy[nb-1];
+    m = sys->mass[nb-1]+1.;
   }
   if (BinaryCenter) {
     x0 = sys->x[0];
