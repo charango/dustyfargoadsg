@@ -47,6 +47,7 @@ boolean         DustFluid = NO, DustDiffusion = NO, Write_StokesNumber = NO;
 boolean         BC1D_SS_ZeroVel = NO, BC1D_SS_NonZeroVel = NO, BC1D_ZeroDens = YES;
 boolean         BM08 = NO;
 boolean         CavityTorque = NO, CompareSGAndSummationTorques = NO;
+boolean         ImposeZeroRadialVelocityBC = NO;
 
 void var(name, ptr, type, necessary, deflt)
      char           *name;
@@ -211,7 +212,7 @@ void ReadVariables(filename)
   }
   if ((*TAILOFF == 'S') || (*TAILOFF == 's')) {
     TailOffGI = YES;
-    CentrifugalBalance = YES;
+    //CentrifugalBalance = YES;
     DontApplySubKeplerian = YES;
   }
   if ((*TAILOFF == 'I') || (*TAILOFF == 'i')) {
@@ -411,6 +412,9 @@ void ReadVariables(filename)
     CavityTorque = YES;
     CentrifugalBalance = YES;
     DontApplySubKeplerian = YES;
+  }
+  if ((*ZEROVRADBC == 'Y') || (*ZEROVRADBC == 'y')) {
+    ImposeZeroRadialVelocityBC = YES;
   }
   if ((*COMPARESGANDSUMMATIONTORQUES == 'Y') || (*COMPARESGANDSUMMATIONTORQUES == 'y')) {
     CompareSGAndSummationTorques = YES;

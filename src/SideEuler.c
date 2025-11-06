@@ -760,6 +760,7 @@ void EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step)
   real dvrad0, dvtheta0, ddens0;
   real damping, Tin, Tout, lambda;
   extern boolean DampToIni, DampToAxi, DampToViscous, DustFluid;
+  extern boolean ImposeZeroRadialVelocityBC;
   vrad = Vrad->Field;
   vtheta = Vtheta->Field;
   dens = Rho->Field;
@@ -777,117 +778,126 @@ void EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step)
     if ( (Rmed[i] < WKZRMIN) || (Rmed[i] > WKZRMAX) ) {
       /* Damping operates only inside the wave killing zones */
       if (Rmed[i] < WKZRMIN) {
-	damping = (Rmed[i]-WKZRMIN)/(GlobalRmed[0]-WKZRMIN);
-	Tin = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
-	lambda = damping*damping*step/Tin;
+        damping = (Rmed[i]-WKZRMIN)/(GlobalRmed[0]-WKZRMIN);
+        Tin = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
+        lambda = damping*damping*step/Tin;
       }
       if (Rmed[i] > WKZRMAX) {
-	damping = (Rmed[i]-WKZRMAX)/(GlobalRmed[GLOBALNRAD-1]-WKZRMAX);
-	Tout = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
-	lambda = damping*damping*step/Tout;
+        damping = (Rmed[i]-WKZRMAX)/(GlobalRmed[GLOBALNRAD-1]-WKZRMAX);
+        Tout = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
+        lambda = damping*damping*step/Tout;
       }
       /* Damping wrt initial profiles (requires DampToIni set to yes
-	 in .par file) */
+	       in .par file) */
       if (DampToIni) {
-	vtheta0 = VthetaMed[i]-Rmed[i]*OmegaFrame;
-	vrad0 = VradMed[i];
-	dens0 = SigmaMed[i];
-	energ0 = EnergyMed[i];
+        vtheta0 = VthetaMed[i]-Rmed[i]*OmegaFrame;
+        vrad0 = VradMed[i];
+        dens0 = SigmaMed[i];
+        energ0 = EnergyMed[i];
       }
       if (DustFluid && DampToIni && (OpenInnerDust == NO)) {
-	dvtheta0 = DVthetaMed[i]-Rmed[i]*OmegaFrame;
-	dvrad0 = DVradMed[i];
-	ddens0 = DSigmaMed[i];
+        dvtheta0 = DVthetaMed[i]-Rmed[i]*OmegaFrame;
+        dvrad0 = DVradMed[i];
+        ddens0 = DSigmaMed[i];
       }
       /* damping wrt instantaneous axisymmetric fields (default
-	 case) */
+	       case) */
       if (DampToAxi) {
-	vrad0   = 0.0;
-	vtheta0 = 0.0;
-	dens0   = 0.0;
-	energ0  = 0.0;
-	for (j = 0; j < ns; j++) {
-	  l = i*ns + j;
-	  vrad0   += vrad[l];
-	  vtheta0 += vtheta[l];
-	  dens0   += dens[l];
-	  energ0  += energ[l];
-	}
-	vrad0   /= (real)ns;
-	vtheta0 /= (real)ns;
-	dens0   /= (real)ns;
-	energ0  /= (real)ns;
+        vrad0   = 0.0;
+        vtheta0 = 0.0;
+        dens0   = 0.0;
+        energ0  = 0.0;
+        for (j = 0; j < ns; j++) {
+          l = i*ns + j;
+          vrad0   += vrad[l];
+          vtheta0 += vtheta[l];
+          dens0   += dens[l];
+          energ0  += energ[l];
+        }
+        vrad0   /= (real)ns;
+        vtheta0 /= (real)ns;
+        dens0   /= (real)ns;
+        energ0  /= (real)ns;
       }
       /* Damping wrt viscous evolving 1D profiles (requires
-	 DampToViscous set to yes in .par file) */
+	       DampToViscous set to yes in .par file) */
       if (DampToViscous) {
-	vtheta0 = 0.0;
-	energ0  = 0.0;
-	for (j = 0; j < ns; j++) {
-	  l = i*ns + j;
-	  vtheta0 += vtheta[l];
-	  energ0  += energ[l];
-	}
-	vtheta0 /= (real)ns;
-	energ0  /= (real)ns;
-	myi1D = 0;
-	while (Rmed1D[myi1D] < Rmed[i]) myi1D++;
-	myi1D--;
-	dens0 = (Rmed1D[myi1D+1]-Rmed[i])*Sigma1D[myi1D] + (Rmed[i]-Rmed1D[myi1D])*Sigma1D[myi1D+1];
-	dens0 /= (Rmed1D[myi1D+1]-Rmed1D[myi1D]);
-	vrad0 = (Rmed1D[myi1D+1]-Rmed[i])*Vrad1D[myi1D] + (Rmed[i]-Rmed1D[myi1D])*Vrad1D[myi1D+1];
-	vrad0 /= (Rmed1D[myi1D+1]-Rmed1D[myi1D]);
-	if (DustFluid && (OpenInnerDust == NO)) { /* could be improved... */  
-	  /* May 2016: damping towards axisymmetric inst. profiles
-	     doesn't to do good for the dust's surface density,
-	     changing to initial profiles... */
-	  /*
-	  dvrad0   = 0.0;
-	  dvtheta0 = 0.0;
-	  ddens0   = 0.0;
-	  for (j = 0; j < ns; j++) {
-	    l = i*ns + j;
-	    dvrad0   += dvrad[l];
-	    dvtheta0 += dvtheta[l];
-	    ddens0   += ddens[l];
-	  }
-	  dvrad0   /= (real)ns;
-	  dvtheta0 /= (real)ns;
-	  ddens0   /= (real)ns;
-	  */
-	  dvtheta0 = DVthetaMed[i]-Rmed[i]*OmegaFrame;
-	  dvrad0 = DVradMed[i];
-	  ddens0 = DSigmaMed[i];
-	}
+        vtheta0 = 0.0;
+        energ0  = 0.0;
+        for (j = 0; j < ns; j++) {
+          l = i*ns + j;
+          vtheta0 += vtheta[l];
+          energ0  += energ[l];
+        }
+        vtheta0 /= (real)ns;
+        energ0  /= (real)ns;
+        myi1D = 0;
+        while (Rmed1D[myi1D] < Rmed[i]) myi1D++;
+        myi1D--;
+        dens0 = (Rmed1D[myi1D+1]-Rmed[i])*Sigma1D[myi1D] + (Rmed[i]-Rmed1D[myi1D])*Sigma1D[myi1D+1];
+        dens0 /= (Rmed1D[myi1D+1]-Rmed1D[myi1D]);
+        vrad0 = (Rmed1D[myi1D+1]-Rmed[i])*Vrad1D[myi1D] + (Rmed[i]-Rmed1D[myi1D])*Vrad1D[myi1D+1];
+        vrad0 /= (Rmed1D[myi1D+1]-Rmed1D[myi1D]);
+        if (DustFluid && (OpenInnerDust == NO)) { /* could be improved... */  
+          /* May 2016: damping towards axisymmetric inst. profiles
+            doesn't to do good for the dust's surface density,
+            changing to initial profiles... */
+          /*
+          dvrad0   = 0.0;
+          dvtheta0 = 0.0;
+          ddens0   = 0.0;
+          for (j = 0; j < ns; j++) {
+            l = i*ns + j;
+            dvrad0   += dvrad[l];
+            dvtheta0 += dvtheta[l];
+            ddens0   += ddens[l];
+          }
+          dvrad0   /= (real)ns;
+          dvtheta0 /= (real)ns;
+          ddens0   /= (real)ns;
+          */
+          dvtheta0 = DVthetaMed[i]-Rmed[i]*OmegaFrame;
+          dvrad0 = DVradMed[i];
+          ddens0 = DSigmaMed[i];
+        }
       }
       //
       if (DustFluid && DampToAxi && (OpenInnerDust == NO)) {
-	dvrad0   = 0.0;
-	dvtheta0 = 0.0;
-	ddens0   = 0.0;
-	for (j = 0; j < ns; j++) {
-	  l = i*ns + j;
-	  dvrad0   += dvrad[l];
-	  dvtheta0 += dvtheta[l];
-	  ddens0   += ddens[l];
-	}
-	dvrad0   /= (real)ns;
-	dvtheta0 /= (real)ns;
-	ddens0   /= (real)ns;
+        dvrad0   = 0.0;
+        dvtheta0 = 0.0;
+        ddens0   = 0.0;
+        for (j = 0; j < ns; j++) {
+          l = i*ns + j;
+          dvrad0   += dvrad[l];
+          dvtheta0 += dvtheta[l];
+          ddens0   += ddens[l];
+        }
+        dvrad0   /= (real)ns;
+        dvtheta0 /= (real)ns;
+        ddens0   /= (real)ns;
       }
       /* Do not modify lines below */
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vrad[l]   = (vrad[l]+lambda*vrad0)/(1.0+lambda);
-	vtheta[l] = (vtheta[l]+lambda*vtheta0)/(1.0+lambda);
-	dens[l]   = (dens[l]+lambda*dens0)/(1.0+lambda);
-	if (EnergyEquation)
-	  energ[l]  = (energ[l]+lambda*energ0)/(1.0+lambda);
-	if (DustFluid && (OpenInnerDust == NO)) {
-	  dvrad[l]   = (dvrad[l]+lambda*dvrad0)/(1.0+lambda);
-	  dvtheta[l] = (dvtheta[l]+lambda*dvtheta0)/(1.0+lambda);
-	  ddens[l]   = (ddens[l]+lambda*ddens0)/(1.0+lambda);
-	}
+        l = i*ns + j;
+        vrad[l]   = (vrad[l]+lambda*vrad0)/(1.0+lambda);
+        vtheta[l] = (vtheta[l]+lambda*vtheta0)/(1.0+lambda);
+        dens[l]   = (dens[l]+lambda*dens0)/(1.0+lambda);
+        if (EnergyEquation)
+          energ[l]  = (energ[l]+lambda*energ0)/(1.0+lambda);
+        if (DustFluid && (OpenInnerDust == NO)) {
+          dvrad[l]   = (dvrad[l]+lambda*dvrad0)/(1.0+lambda);
+          dvtheta[l] = (dvtheta[l]+lambda*dvtheta0)/(1.0+lambda);
+          ddens[l]   = (ddens[l]+lambda*ddens0)/(1.0+lambda);
+        }
+        /* CB: Nov 2025 */
+        if (ImposeZeroRadialVelocityBC) {
+          if ( ((Rmed[i] < WKZRMIN) && ( (i == 0) || (i == 1) )) || ((Rmed[i] > WKZRMAX) && ( (i == nr-1) || (i == nr) )) ) {
+            vrad[l] = 0.0;
+            dens[l] = dens0;
+            vtheta[l] = vtheta0;
+          }
+        }
+        /* ------------ */
       }
     }
   }
