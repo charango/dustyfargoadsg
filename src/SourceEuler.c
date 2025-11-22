@@ -475,7 +475,9 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
 
     if (IsDisk == YES) {
       /* Indirect term of star potential */
-      DiskOnPrimaryAcceleration   = ComputeAccel (force, Rho, 0.0, 0.0, 0.0, 0.0, sys);
+      //DiskOnPrimaryAcceleration   = ComputeAccel (force, Rho, 0.0, 0.0, 0.0, 0.0, sys);
+      // CB: new nov 2025 (Sergei's proposition)
+      DiskOnPrimaryAcceleration   = ComputeAccel (force, Rho, 0.0, 0.0, INDIRECTTERMSMOOTHING, 0.0, sys);
       /* Gravitational potential from star and planet(s) */
       FillForcesArrays (sys);
       /* Planets' velocities are updated with gravitationnal
