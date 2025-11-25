@@ -8,8 +8,8 @@
 
 #include "mp.h"
 
-extern boolean OpenInner, OpenInnerDust, KNOpen, NonReflecting, OuterSourceMass, Evanescent;
-extern boolean SelfGravity, SGZeroMode, EnergyEquation, MixedBC, AccBoundary;
+extern boolean WallBoundary, OpenInner, OpenInnerDust, KNOpen, NonReflecting, OuterSourceMass, Evanescent;
+extern boolean SelfGravity, SGZeroMode, EnergyEquation, AccBoundary;
 extern Pair DiskOnPrimaryAcceleration;
 real Hp0, Hg0, Ht0;
 
@@ -280,10 +280,8 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
           energy[l-ns]   = energy[l]; // zero gradient for thermal energy
           energy[l-2*ns] = energy[l]; // zero gradient for thermal energy
         }
-        if (DontApplySubKeplerian) {
-          vt[l-ns]   = vt[l] * sqrt(Rmed[i]/Rmed[i-1]);  // Keplerian extrapolation
-          vt[l-2*ns] = vt[l] * sqrt(Rmed[i]/Rmed[i-2]);  // Keplerian extrapolation
-        }
+        vt[l-ns]   = vt[l] * sqrt(Rmed[i]/Rmed[i-1]);  // Keplerian extrapolation
+        vt[l-2*ns] = vt[l] * sqrt(Rmed[i]/Rmed[i-2]);  // Keplerian extrapolation
         // we just allow inflow
         if ((vr[l+ns] >= 0.0) || (rho[l] < SigmaMed[0])) {
           vr[l]    = 0.0;
@@ -293,27 +291,12 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
           vr[l]    = vr[l+ns];
           vr[l-ns] = vr[l+ns];
         }
-        /*
-        else { // openinner
-          if ((vr[l+ns] >= 0.0) || (rho[l] < SigmaMed[0]))
-            vr[l] = 0.0;            // vr set to zero when directed outward
-          else
-            vr[l] = vr[l+ns];       // vr extrapolated otherwise 
-        }
-        */
-      }
-      if (CavityTorque) {
-        /* June 2022 */
-        rho[l-ns] = SigmaMed[0];
-        vt[l-ns]  = VthetaMed[0]-Rmed[0]*OmegaFrame;;
-        vr[l]     = VradMed[0];
       }
     }
   }
   /* -------------------------------- */
   /* Outer boundary condition         */
   /* -------------------------------- */
-  //if ( (CPU_Rank == CPU_Highest) && (!MixedBC) ) { // cuidadin
   if ( CPU_Rank == CPU_Highest ) {
     i = nr-1;
 #pragma omp parallel for private(l)
@@ -328,8 +311,7 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
       rho[l] = rho[l-ns];
       if (EnergyEquation)
 	      energy[l] = energy[l-ns]; // zero gradient for thermal energy
-      if (DontApplySubKeplerian)
-	      vt[l] = vt[l-ns] * pow(Rmed[i]/Rmed[i-1],-0.5);
+      vt[l] = vt[l-ns] * pow(Rmed[i]/Rmed[i-1],-0.5);
       if (KNOpen) {
         if ((vr[l-ns] < 0.0))
           vr[l]  = 0.0; // we just allow outflow
@@ -349,12 +331,6 @@ void OpenBoundary (Vrad, Vtheta, Rho, Energy)
           vr[l] = 0.0;            // vr set to zero when directed inward
         else
           vr[l] = vr[l-ns];       // vr extrapolated otherwise 
-      }
-      if (CavityTorque) {
-        /* June 2022  */
-        rho[l] = SigmaMed[i];
-        vt[l]  = VthetaMed[i]-Rmed[i]*OmegaFrame;
-        vr[l]  = VradMed[i];
       }
     }
   }
@@ -402,7 +378,7 @@ void OpenBoundaryd (DVrad, DVtheta, DRho)
   /* -------------------------------- */
   /* Outer boundary condition         */
   /* -------------------------------- */
-  if ( (CPU_Rank == CPU_Highest) && (!MixedBC) ) {
+  if ( CPU_Rank == CPU_Highest ) {
     i = nr-1;
 #pragma omp parallel for private(l)
     for (j = 0; j < ns; j++) {
@@ -454,19 +430,19 @@ void AccretingBoundary (Vrad, Vtheta, Rho, Energy)
       energy[l-ns] = energy[l];
       /* Option to decrease surface density in first ring */
       if (DecInner){
-	if (PhysicalTime != 0.0)
-	  dens[l] *= 0.999;
-	if (vr[l+ns] > 0)
-	  vr[l] = 0;
-	else
-	  vr[l] = vr[l+ns];
+        if (PhysicalTime != 0.0)
+          dens[l] *= 0.999;
+        if (vr[l+ns] > 0)
+          vr[l] = 0;
+        else
+          vr[l] = vr[l+ns];
       } else {
-	vr[l] = -1.5*FViscosity(Rinf[i])/Rinf[i];
-	// Line below not strictly necessary (testing purposes mainly)
-	vr[l-ns] = -1.5*FViscosity(Rinf[i-1])/Rinf[i-1];
-	/* Zero gradient in Mdot ~ nu Sigma */
-	dens[l-ns] = dens[l] * FViscosity(Rinf[i]) / FViscosity(Rinf[i-1]);
-	vt[l-ns] = VthetaMed[i-1]-Rmed[i-1]*OmegaFrame;
+        vr[l] = -1.5*FViscosity(Rinf[i])/Rinf[i];
+        // Line below not strictly necessary (testing purposes mainly)
+        vr[l-ns] = -1.5*FViscosity(Rinf[i-1])/Rinf[i-1];
+        /* Zero gradient in Mdot ~ nu Sigma */
+        dens[l-ns] = dens[l] * FViscosity(Rinf[i]) / FViscosity(Rinf[i-1]);
+        vt[l-ns] = VthetaMed[i-1]-Rmed[i-1]*OmegaFrame; // CB: could be instead a Keplerian extrapolation of vt next ring
       }
     }
   }
@@ -500,31 +476,31 @@ void AccretingBoundary (Vrad, Vtheta, Rho, Energy)
       vr[l+ns] = -1.5*FViscosity(Rinf[i+1])/Rinf[i+1];
       vr_med = 0.5*(vr[l]+vr[l+ns]);
       dens[l] = mdot/2./PI/Rmed[i]/vr_med;
-      vt[l] = VthetaMed[i]-Rmed[i]*OmegaFrame;
+      vt[l] = VthetaMed[i]-Rmed[i]*OmegaFrame; // CB: could be instead a Keplerian extrapolation of vt in previous ring
       //printf ("vr_med = %lg, mdot = %lg, dens = %lg, vt = %lg\n",vr_med,mdot,dens[l],vt[l]);
     }
     if (axi[i+IMIN-2] <= floordens){
       for (j = 0; j < ns; j++){
-	l = i*ns+j;
-	dens[l] = floordens;
-	dens[l-ns] = floordens;
+        l = i*ns+j;
+        dens[l] = floordens;
+        dens[l-ns] = floordens;
       }
     } else if (axi[i+IMIN-1] <= floordens){
       for (j = 0; j < ns; j++){
-	l = i*ns+j;
-	dens[l] = floordens;
+        l = i*ns+j;
+        dens[l] = floordens;
       }
     }
   }
 }
 
 
-void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
-     PolarGrid *Vrad, *Rho, *Energy, *Vtheta;
+void NonReflectingBoundary (Vrad, Rho, Energy, sys)
+     PolarGrid *Vrad, *Rho, *Energy;
      PlanetarySystem *sys;
 {
   int i, j, k, l, ns, nr, jp, lp, i_angle;
-  real *rho, *vr, *vt, *cs, *energy;
+  real *rho, *vr, *cs, *energy;
   real dangle, mean;
   real cs0, cs1, vr_med, csnrm1, csnrm2;
   real dens0, dens1, densnrm2, densnrm1;
@@ -536,7 +512,6 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
   nr = Rho->Nrad;
   rho = Rho->Field;
   vr  = Vrad->Field;
-  vt = Vtheta->Field;
   /* ======================================= */
   /* INNER NON-REFLECTING BOUNDARY CONDITION */
   /* ======================================= */
@@ -549,8 +524,8 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       yp = sys->y[k];
       rp = sqrt( xp*xp + yp*yp );
       if ( (rp < buf) && (rp >= Radii[0]) ) {
-	r_in = rp;
-	omega_in = pow(rp,-1.5);
+        r_in = rp;
+        omega_in = pow(rp,-1.5);
       }
       buf = r_in;
     }
@@ -564,10 +539,10 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       dens0 = 0.0;
       dens1 = 0.0;
       for (j = 0; j < ns; j++) {
-	cs0 += cs[j];
-	cs1 += cs[ns+j];
-	dens0 += rho[j];
-	dens1 += rho[ns+j];
+        cs0 += cs[j];
+        cs1 += cs[ns+j];
+        dens0 += rho[j];
+        dens1 += rho[ns+j];
       }
       cs0 /= (real)ns;
       cs1 /= (real)ns;
@@ -580,32 +555,32 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       /* (c) boundary on vrad and dens fields */
 #pragma omp parallel for private(l,jp,lp,vr_med)
       for (j = 0; j < ns; j++) {
-	l = j+i*ns;   // recall i=1
-	jp = j+i_angle;
-	if (jp >= ns) jp -= ns;
-	if (jp < 0) jp += ns;
-	lp = jp;
-	if (AccBoundary == NO)
-	  rho[lp] = rho[l];       /* copy first ring into ghost ring */
-	else
-	  rho[lp] = dens0 + (rho[l]-dens1);
-	vr_med = -cs1*(rho[l]-dens1)/dens1;
-	if (AccBoundary == YES) {
-	  vr[l] += (2.*vr_med-vr[l+ns]);
-	}
-	else
-	  vr[l] = 2.*vr_med-vr[l+ns];
+        l = j+i*ns;   // recall i=1
+        jp = j+i_angle;
+        if (jp >= ns) jp -= ns;
+        if (jp < 0) jp += ns;
+        lp = jp;
+        if (AccBoundary == NO)
+          rho[lp] = rho[l];       /* copy first ring into ghost ring */
+        else
+          rho[lp] = dens0 + (rho[l]-dens1);
+        vr_med = -cs1*(rho[l]-dens1)/dens1;
+        if (AccBoundary == YES) {
+          vr[l] += (2.*vr_med-vr[l+ns]);
+        }
+        else
+          vr[l] = 2.*vr_med-vr[l+ns];
       }
       if (AccBoundary == NO) {
-	/* (d) density adjustment */
-	mean = 0.0;
-	for (j = 0; j < ns; j++) {
-	  mean += rho[j];
-	}
-	mean /= (real)ns;
-	for (j = 0; j < ns; j++) {
-	  rho[j] += (SigmaMed[0]-mean);
-	}
+        /* (d) density adjustment */
+        mean = 0.0;
+        for (j = 0; j < ns; j++) {
+          mean += rho[j];
+        }
+        mean /= (real)ns;
+        for (j = 0; j < ns; j++) {
+          rho[j] += (SigmaMed[0]-mean);
+        }
       }
     }
     /* ------------------------ */
@@ -616,8 +591,8 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       cs0 = 0.0;
       cs1 = 0.0;
       for (j = 0; j < ns; j++) {
-	cs0 += cs[j];
-	cs1 += cs[ns+j];
+        cs0 += cs[j];
+        cs1 += cs[ns+j];
       }
       cs0 /= (real)ns;
       cs1 /= (real)ns;
@@ -629,40 +604,40 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       /* (a) shift on energy and vrad */
 #pragma omp parallel for private(l,jp,lp,vr_med)
       for (j = 0; j < ns; j++) {
-	/* The expression below should be refined as we need to know the
-	   orbital frequency of the nearest planet */
-	l = j+i*ns;   // recall i=1
-	jp = j+i_angle;
-	if (jp >= ns) jp -= ns;
-	if (jp < 0) jp += ns;
-	lp = jp;
-	energy[lp] = energy[l];
-	vr_med = -csinit1*(rho[l]-SigmaMed[1])/SigmaMed[1];
-	vr[l] = 2.*vr_med-vr[l+ns];
+        /* The expression below should be refined as we need to know the
+          orbital frequency of the nearest planet */
+        l = j+i*ns;   // recall i=1
+        jp = j+i_angle;
+        if (jp >= ns) jp -= ns;
+        if (jp < 0) jp += ns;
+        lp = jp;
+        energy[lp] = energy[l];
+        vr_med = -csinit1*(rho[l]-SigmaMed[1])/SigmaMed[1];
+        vr[l] = 2.*vr_med-vr[l+ns];
       }
       /* (b) shift on acoustic part of density */
 #pragma omp parallel for private(l,jp,lp,vr_med)
       for (j = 0; j < ns; j++) {
-	/* The expression below should be refined as we need to know the
-	   orbital frequency of the nearest planet */
-	rho[j] = SigmaMed[0] + (ADIABATICINDEX-1.0)*(energy[j]-EnergyMed[0])/csinit0/csinit0;
+        /* The expression below should be refined as we need to know the
+          orbital frequency of the nearest planet */
+        rho[j] = SigmaMed[0] + (ADIABATICINDEX-1.0)*(energy[j]-EnergyMed[0])/csinit0/csinit0;
       }
       /* (c) density and energy adjustments */
       mean = 0.0;
       for (j = 0; j < ns; j++) {
-	mean += rho[j];
+	      mean += rho[j];
       }
       mean /= (real)ns;
       for (j = 0; j < ns; j++) {
-	rho[j] += (SigmaMed[0]-mean);
+	      rho[j] += (SigmaMed[0]-mean);
       }
       mean = 0.0;
       for (j = 0; j < ns; j++) {
-	mean += energy[j];
+      	mean += energy[j];
       }
       mean /= (real)ns;
       for (j = 0; j < ns; j++) {
-	energy[j] += (EnergyMed[0]-mean);
+	      energy[j] += (EnergyMed[0]-mean);
       }
     }
   }
@@ -677,8 +652,8 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       yp = sys->y[k];
       rp = sqrt( xp*xp + yp*yp );
       if ( (rp > buf) && (rp <= Radii[GLOBALNRAD]) ) {
-	r_out = rp;
-	omega_out = pow(rp,-1.5);
+        r_out = rp;
+        omega_out = pow(rp,-1.5);
       }
       buf = r_out;
     }
@@ -709,39 +684,39 @@ void NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys)
       if (jp < 0) jp += ns;
       lp = jp+(i-1)*ns;
       if (AccBoundary == NO) {
-	rho[l] = rho[lp];		/* copy first ring into ghost ring */
-	energy[l] = energy[lp];	        /* copy first ring into ghost ring */
+        rho[l] = rho[lp];		/* copy first ring into ghost ring */
+        energy[l] = energy[lp];	        /* copy first ring into ghost ring */
       } else {
-	rho[l] = densnrm1 + (rho[lp]-densnrm2);
-	energy[l] = energy[lp];	        /* copy first ring into ghost ring */
+        rho[l] = densnrm1 + (rho[lp]-densnrm2);
+        energy[l] = energy[lp];	        /* copy first ring into ghost ring */
       }
       if (!EnergyEquation)
-	vr_med = csnrm1*(rho[l-ns]-densnrm2)/densnrm2;
+	      vr_med = csnrm1*(rho[l-ns]-densnrm2)/densnrm2;
       else
-	vr_med = cs[l]*(rho[l-ns]-densnrm2)/densnrm2;
+	      vr_med = cs[l]*(rho[l-ns]-densnrm2)/densnrm2;
       if (AccBoundary == YES) {
-	vr[l] += (2.*vr_med-vr[l-ns]);
+      	vr[l] += (2.*vr_med-vr[l-ns]);
       }
       else
-	vr[l] = 2.*vr_med-vr[l-ns];
+      	vr[l] = 2.*vr_med-vr[l-ns];
     }
     /* density and energy adjustments */
     if (AccBoundary == NO) {
       mean = 0.0;
       for (j = 0; j < ns; j++) {
-	mean += rho[j+ns*(nr-1)];
+      	mean += rho[j+ns*(nr-1)];
       }
       mean /= (real)ns;
       for (j = 0; j < ns; j++) {
-	rho[j+(nr-1)*ns] += SigmaMed[nr-1]-mean;
+      	rho[j+(nr-1)*ns] += SigmaMed[nr-1]-mean;
       }
       mean = 0.0;
       for (j = 0; j < ns; j++) {
-	mean += energy[j+ns*(nr-1)];
+      	mean += energy[j+ns*(nr-1)];
       }
       mean /= (real)ns;
       for (j = 0; j < ns; j++) {
-	energy[j+(nr-1)*ns] += EnergyMed[nr-1]-mean;
+	      energy[j+(nr-1)*ns] += EnergyMed[nr-1]-mean;
       }
     }
   }
@@ -903,59 +878,6 @@ void EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step)
   }
 }
 
-void EvanescentBoundaryDust (DVrad, DVtheta, DRho, step)
-     PolarGrid *DVrad, *DVtheta, *DRho;
-     real step;
-{
-  int i, j, l, nr, ns;
-  int myi1D;
-  real *dvrad, *dvtheta, *ddens;
-  real dvrad0, dvtheta0, ddens0;
-  real damping, Tin, Tout, lambda;
-  dvrad = DVrad->Field;
-  dvtheta = DVtheta->Field;
-  ddens = DRho->Field;
-  nr = DRho->Nrad;
-  ns = DRho->Nsec;
-  
-  lambda = 0.0;
-  for (i = 0; i < nr; i++) {
-    if ( (Rmed[i] < WKZRMIN) || (Rmed[i] > WKZRMAX) ) {
-      /* Damping operates only inside the wave killing zones */
-      if (Rmed[i] < WKZRMIN) {
-	damping = (Rmed[i]-WKZRMIN)/(GlobalRmed[0]-WKZRMIN);
-	Tin = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
-	lambda = damping*damping*step/Tin;
-      }
-      if (Rmed[i] > WKZRMAX) {
-	damping = (Rmed[i]-WKZRMAX)/(GlobalRmed[GLOBALNRAD-1]-WKZRMAX);
-	Tout = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
-	lambda = damping*damping*step/Tout;
-      }
-      /* Damping wrt initial profiles (requires DampToIni set to yes
-	 in .par file) */
-      dvrad0   = 0.0;
-      dvtheta0 = 0.0;
-      ddens0   = 0.0;
-      for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	dvrad0   += dvrad[l];
-	dvtheta0 += dvtheta[l];
-	ddens0   += ddens[l];
-      }
-      dvrad0   /= (real)ns;
-      dvtheta0 /= (real)ns;
-      ddens0   /= (real)ns;
-      /* Do not modify lines below */
-      for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	dvrad[l]   = (dvrad[l]+lambda*dvrad0)/(1.0+lambda);
-	dvtheta[l] = (dvtheta[l]+lambda*dvtheta0)/(1.0+lambda);
-	ddens[l]   = (ddens[l]+lambda*ddens0)/(1.0+lambda);
-      }
-    }
-  }
-}
 
 void ApplyOuterSourceMass (Rho, Vrad)
      PolarGrid *Rho, *Vrad;
@@ -1050,51 +972,90 @@ void ApplySubKeplerianBoundary (Vtheta, DVtheta)
   }
 }
 
+
+void ApplyWallBoundaries (Vrad, Rho, Energy, DVrad, DRho)
+      PolarGrid *Vrad, *Rho, *Energy;
+      PolarGrid *DVrad, *DRho;
+{
+  int i, j, l, nr, ns;
+  real *vr, *rho, *energy;
+  real *dvr, *drho;
+  extern boolean DustFluid;
+  vr = Vrad->Field;
+  rho = Rho->Field;
+  energy = Energy->Field;
+  dvr = DVrad->Field;
+  drho = DRho->Field;
+  nr = Rho->Nrad;
+  ns = Rho->Nsec;
+  /* ------------------- */
+  /* Inner Wall Boundary */
+  /* ------------------- */
+  if ( CPU_Rank == 0 ) {
+    i = 2;
+    for (j = 0; j < ns; j++) {
+      vr[(i-1)*ns+j] = 0.0;
+      vr[(i-2)*ns+j] = -vr[i*ns+j];
+      rho[(i-1)*ns+j] = SigmaMed[i-1];
+      rho[(i-2)*ns+j] = SigmaMed[i-2];
+      if (DustFluid) {
+        dvr[(i-1)*ns+j] = 0.0;
+        dvr[(i-2)*ns+j] = -dvr[i*ns+j];
+        drho[(i-1)*ns+j] = DSigmaMed[i-1];
+        drho[(i-2)*ns+j] = DSigmaMed[i-2];
+      }
+    }
+  }
+  /* ------------------- */
+  /* Outer Wall Boundary */
+  /* ------------------- */
+  if ( CPU_Rank == CPU_Highest ) {
+    i = nr - 3;
+    for (j = 0; j < ns; j++) {
+      vr[(i+2)*ns+j] = 0.0;
+      vr[(i+3)*ns+j] = -vr[(i+1)*ns+j];
+      rho[(i+1)*ns+j] = SigmaMed[i+1];
+      rho[(i+2)*ns+j] = SigmaMed[i+2];
+      if (DustFluid) {
+        dvr[(i+2)*ns+j] = 0.0;
+        dvr[(i+3)*ns+j] = -dvr[(i+1)*ns+j];
+        drho[(i+1)*ns+j] = DSigmaMed[i+1];
+        drho[(i+2)*ns+j] = DSigmaMed[i+2];
+      }
+    }
+  }
+
+}
+
+
 void ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step, sys)
      PolarGrid *Vrad, *Vtheta, *Rho, *Energy;
      PolarGrid *DVrad, *DVtheta, *DRho;
      real step;
      PlanetarySystem *sys;
 {
-  extern boolean DustFluid;
-  if (OpenInner == YES) {
+  extern boolean DustFluid, DontApplySubKeplerian;
+
+  if (WallBoundary == YES)
+    ApplyWallBoundaries (Vrad, Rho, Energy, DVrad, DRho);
+    ApplySubKeplerianBoundary (Vtheta, DVtheta);
+
+  if (OpenInner == YES)
     OpenBoundary (Vrad, Vtheta, Rho, Energy);
-    if (DustFluid && (OpenInnerDust == YES)) {
-      OpenBoundaryd (DVrad, DVtheta, DRho);
-      //OpenBoundaryd (DVrad, DVtheta, Rho, DRho);
-    }
-  }
-  // May 2019: outer source mass function shifted prior to call to 
-  // non-reflecting BC, otherwise planet wakes bounce off the grid edges
-  //if (OuterSourceMass == YES) ApplyOuterSourceMass (Rho, Vrad);
-  //
+
+  if (DustFluid && (OpenInnerDust == YES))
+    OpenBoundaryd (DVrad, DVtheta, DRho);
+
   if (NonReflecting == YES) {
     if (EnergyEquation)
       ComputeSoundSpeed (Rho, Energy, sys);
-    NonReflectingBoundary (Vrad, Rho, Energy, Vtheta, sys);
-    if (DustFluid) {
-      if (OpenInnerDust == YES)
-	      OpenBoundaryd (DVrad, DVtheta, DRho);
-      else
-	      EvanescentBoundaryDust (DVrad, DVtheta, DRho, step);
-    }
+    NonReflectingBoundary (Vrad, Rho, Energy, sys);
+    ApplySubKeplerianBoundary (Vtheta, DVtheta);
   }
-  if (Evanescent == YES) {
-    EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step);
-    if (DustFluid && (OpenInnerDust == YES))
-      OpenBoundaryd (DVrad, DVtheta, DRho);
-  }
-  /* New 'mixed' boundary condition, where an open BC is applied at
-     the grid's inner edge, and an evanescent BC at the outer edge (WKRMAX
-     needs to be specified) */
-  if (MixedBC == YES) {
-    OpenBoundary (Vrad, Vtheta, Rho, Energy);
-    EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step);
-  }
-  if (AccBoundary == YES) {
+ 
+  if (AccBoundary == YES)
     AccretingBoundary(Vrad, Vtheta, Rho, Energy);
-    EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step);
-  }
+  
   if (OuterSourceMass == YES) ApplyOuterSourceMass (Rho, Vrad);
 }
 
@@ -1163,9 +1124,9 @@ void DampDensity(Vrad, Vtheta, Rho, Energy, step, sys)
   for (i = 0; i < nr; i++) {
     if ( (Rmed[i] > cutrmin) && (Rmed[i] < cutrmax) ) {
       if ( (Rmed[i] > cutrmin) && (Rmed[i] < cutrmed) ) 
-	normdampdist = (Rmed[i]-cutrmin)/(cutrmed-cutrmin);
+	      normdampdist = (Rmed[i]-cutrmin)/(cutrmed-cutrmin);
       if ( (Rmed[i] >= cutrmed) && (Rmed[i] < cutrmax) )
-	normdampdist = (Rmed[i]-cutrmax)/(cutrmed-cutrmax);
+	      normdampdist = (Rmed[i]-cutrmax)/(cutrmed-cutrmax);
       damping = pow(sin((normdampdist)*0.5*M_PI),2.);
       lambda = damping*step;  // to be checked / customized...
       /* damping towards instantaneous axisymmetric fields... */
@@ -1174,11 +1135,11 @@ void DampDensity(Vrad, Vtheta, Rho, Energy, step, sys)
       dens0   = 0.0;
       energ0  = 0.0;
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vrad0   += vrad[l];
-	vtheta0 += vtheta[l];
-	dens0   += dens[l];
-	energ0  += energ[l];
+        l = i*ns + j;
+        vrad0   += vrad[l];
+        vtheta0 += vtheta[l];
+        dens0   += dens[l];
+        energ0  += energ[l];
       }
       vrad0   /= (real)ns;
       vtheta0 /= (real)ns;
@@ -1186,12 +1147,12 @@ void DampDensity(Vrad, Vtheta, Rho, Energy, step, sys)
       energ0  /= (real)ns;
       /* Do not modify lines below */
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	vrad[l]   = (vrad[l]+lambda*vrad0)/(1.0+lambda);
-	vtheta[l] = (vtheta[l]+lambda*vtheta0)/(1.0+lambda);
-	dens[l]   = (dens[l]+lambda*dens0)/(1.0+lambda);
-	if (EnergyEquation)
-	  energ[l]  = (energ[l]+lambda*energ0)/(1.0+lambda);
+        l = i*ns + j;
+        vrad[l]   = (vrad[l]+lambda*vrad0)/(1.0+lambda);
+        vtheta[l] = (vtheta[l]+lambda*vtheta0)/(1.0+lambda);
+        dens[l]   = (dens[l]+lambda*dens0)/(1.0+lambda);
+        if (EnergyEquation)
+          energ[l]  = (energ[l]+lambda*energ0)/(1.0+lambda);
       }
     }
   }
@@ -1294,22 +1255,22 @@ void ApplyPhotoEvaporation (Vrad, Rho, dt)
   if (Rhole > GlobalRmed[1]) {
     for (i = 0; i <= nr; i++){
       if (Rsup[i] <= Rhole){
-	for (j = 0; j <= ns; j++){
-	  l = i*ns+j;
-	  dens[l] = floordens;
-	}
+        for (j = 0; j <= ns; j++){
+          l = i*ns+j;
+          dens[l] = floordens;
+        }
       }
     }
     summ=0;
     for (i = Zero_or_active; i < Max_or_active; i++){
       x = 0.95 * ((Rmed[i]-Rhole)*FACTORUNITLENGTH) * pow(FACTORUNITMASS,-1.0);
       if (x >= 0.0) {
-	coeff = a2*b2*exp(b2*x) + c2*d2*exp(d2*x)+ e2*f2*exp(f2*x);
-	coeff /= (Rmed[i]*FACTORUNITLENGTH);
-	sigd = coeff * exp(-pow((x/57.0),10.0));
+        coeff = a2*b2*exp(b2*x) + c2*d2*exp(d2*x)+ e2*f2*exp(f2*x);
+        coeff /= (Rmed[i]*FACTORUNITLENGTH);
+        sigd = coeff * exp(-pow((x/57.0),10.0));
       } 
       else
-	sigd = 0.0;
+	      sigd = 0.0;
       summ += ns*Surf[i]*sigd;  // this is the local Mdot
     }
     MPI_Allreduce (&summ, &world_summ, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -1324,21 +1285,21 @@ void ApplyPhotoEvaporation (Vrad, Rho, dt)
     for (i = 0; i < nr; i++) {
       x = 0.95 * ((Rmed[i]-Rhole)*FACTORUNITLENGTH) * pow(FACTORUNITMASS,-1.0);
       if (x >= 0.0) {
-	coeff = a2*b2*exp(b2*x) + c2*d2*exp(d2*x)+ e2*f2*exp(f2*x);
-	coeff /= (Rmed[i]*FACTORUNITLENGTH);
-	sigd = coeff * exp(-pow((x/57.0),10.0));
+        coeff = a2*b2*exp(b2*x) + c2*d2*exp(d2*x)+ e2*f2*exp(f2*x);
+        coeff /= (Rmed[i]*FACTORUNITLENGTH);
+        sigd = coeff * exp(-pow((x/57.0),10.0));
       } 
       else
-	sigd = 0.0;
+	      sigd = 0.0;
       sigmareduc = scale * sigd ;
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	dens[l] = dens[l] - sigmareduc*dt;
-	if ((dens[l] <= floordens)){
-	  dens[l] = floordens;
-	} else {
-	  checkmass += sigmareduc * Surf[i] * dt;
-	}
+        l = i*ns + j;
+        dens[l] = dens[l] - sigmareduc*dt;
+        if ((dens[l] <= floordens)){
+          dens[l] = floordens;
+        } else {
+          checkmass += sigmareduc * Surf[i] * dt;
+        }
       }
     }
   } else {
@@ -1351,18 +1312,18 @@ void ApplyPhotoEvaporation (Vrad, Rho, dt)
       l0 = log10(x);
       lx = log(x);
       if (x > 0.7){
-	sigd = pow(10.0,(a1*pow(l0,6.0) + b1*pow(l0,5.0) + c1*pow(l0,4.0)+ d1*pow(l0,3.0) \
-		       + e1*pow(l0,2.0) + f1*l0 + g1));
-	coeff = 6.0*a1*pow(lx,5.0)/pow(x,2.0)/pow(l10,7.0); 
-	coeff+= 5.0*b1*pow(lx,4.0)/pow(x,2.0)/pow(l10,6.0);
-	coeff+= 4.0*c1*pow(lx,3.0)/pow(x,2.0)/pow(l10,5.0);
-	coeff+= 3.0*d1*pow(lx,2.0)/pow(x,2.0)/pow(l10,4.0);
-	coeff+= 2.0*e1*lx/pow(x,2.0)/pow(l10,3.0);
-	coeff+= 1.0*f1/pow(x,2.0)/pow(l10,2.0);
-	sigd *= (coeff*exp(-pow((x/100.),10.0)));
+        sigd = pow(10.0,(a1*pow(l0,6.0) + b1*pow(l0,5.0) + c1*pow(l0,4.0)+ d1*pow(l0,3.0) \
+                + e1*pow(l0,2.0) + f1*l0 + g1));
+        coeff = 6.0*a1*pow(lx,5.0)/pow(x,2.0)/pow(l10,7.0); 
+        coeff+= 5.0*b1*pow(lx,4.0)/pow(x,2.0)/pow(l10,6.0);
+        coeff+= 4.0*c1*pow(lx,3.0)/pow(x,2.0)/pow(l10,5.0);
+        coeff+= 3.0*d1*pow(lx,2.0)/pow(x,2.0)/pow(l10,4.0);
+        coeff+= 2.0*e1*lx/pow(x,2.0)/pow(l10,3.0);
+        coeff+= 1.0*f1/pow(x,2.0)/pow(l10,2.0);
+        sigd *= (coeff*exp(-pow((x/100.),10.0)));
       } 
       else
-	sigd = 0.0;
+	      sigd = 0.0;
       summ += ns*Surf[i]*sigd;
     }
     MPI_Allreduce (&summ, &world_summ, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -1379,28 +1340,28 @@ void ApplyPhotoEvaporation (Vrad, Rho, dt)
       l0 = log10(x);
       lx = log(x);
       if ( x > 0.7 ){
-	sigd = pow(10.0,(a1*pow(l0,6.0) + b1*pow(l0,5.0) + c1*pow(l0,4.0)+ d1*pow(l0,3.0) \
-		       + e1*pow(l0,2.0) + f1*l0 + g1));
-	coeff = 6.0*a1*pow(lx,5.0)/pow(x,2.0)/pow(l10,7.0); 
-	coeff+= 5.0*b1*pow(lx,4.0)/pow(x,2.0)/pow(l10,6.0);
-	coeff+= 4.0*c1*pow(lx,3.0)/pow(x,2.0)/pow(l10,5.0);
-	coeff+= 3.0*d1*pow(lx,2.0)/pow(x,2.0)/pow(l10,4.0);
-	coeff+= 2.0*e1*lx/pow(x,2.0)/pow(l10,3.0);
-	coeff+= 1.0*f1/pow(x,2.0)/pow(l10,2.0);
-	sigd *= (coeff*exp(-pow((x/100.),10.0)));
+        sigd = pow(10.0,(a1*pow(l0,6.0) + b1*pow(l0,5.0) + c1*pow(l0,4.0)+ d1*pow(l0,3.0) \
+                + e1*pow(l0,2.0) + f1*l0 + g1));
+        coeff = 6.0*a1*pow(lx,5.0)/pow(x,2.0)/pow(l10,7.0); 
+        coeff+= 5.0*b1*pow(lx,4.0)/pow(x,2.0)/pow(l10,6.0);
+        coeff+= 4.0*c1*pow(lx,3.0)/pow(x,2.0)/pow(l10,5.0);
+        coeff+= 3.0*d1*pow(lx,2.0)/pow(x,2.0)/pow(l10,4.0);
+        coeff+= 2.0*e1*lx/pow(x,2.0)/pow(l10,3.0);
+        coeff+= 1.0*f1/pow(x,2.0)/pow(l10,2.0);
+        sigd *= (coeff*exp(-pow((x/100.),10.0)));
       } 
       else
-	sigd = 0;
+	      sigd = 0;
       sigmareduc = scale * sigd ;
       //printf ("CPU %d: at r=%lg, dsigma/sigma=%lg\n",CPU_Rank,Rmed[i],sigmareduc*dt/axidens[i+IMIN]);
       for (j = 0; j < ns; j++) {
-	l = i*ns + j;
-	dens[l] = dens[l] - sigmareduc*dt;
-	if (dens[l] <= floordens){
-	  dens[l] = floordens;
-	} else {
-	  checkmass += sigmareduc * Surf[i] * dt;
-	}
+        l = i*ns + j;
+        dens[l] = dens[l] - sigmareduc*dt;
+        if (dens[l] <= floordens){
+          dens[l] = floordens;
+        } else {
+          checkmass += sigmareduc * Surf[i] * dt;
+        }
       }
     }
   }

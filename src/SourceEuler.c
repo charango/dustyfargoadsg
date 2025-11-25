@@ -33,7 +33,7 @@ extern boolean EnergyEquation, EntropyDiffusion, RadiativeDiffusion, ImplicitRad
 extern boolean SelfGravity, ZMPlus;
 extern boolean DustDiffusion;
 extern boolean FastTransport, IsDisk, AddFloors, DustFluid, DustFeedback, DustFeelDisk, DampToViscous, ShortFrictionTimeApproximation;
-extern boolean AddMass, DontApplySubKeplerian, DiscEvaporation, PhotoEvaporation, CavityTorque;
+extern boolean AddMass, DiscEvaporation, PhotoEvaporation, CavityTorque;
 
 Pair DiskOnPrimaryAcceleration;
 
@@ -530,11 +530,12 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
       /* NEW (May 2016): evanescent boundary condition can now damp toward
       1D viscously evolving density and radial velocity profiles. Both
       profiles are solved through an independent 1D viscous evolution
-      problem without planets. */
-      if ( (Evanescent && DampToViscous) || (DampToViscous))
+      problem without planets. Nov 2025: can well be calculated even if 
+      evanescent boundaries aren't used! */
+      if (DampToViscous)
 	      SolveOneDViscousEvolution (dt);
       
-      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+      //ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 
       Crashed = DetectCrash (Rho);    /* test for negative density values */
       if (DustFluid) 
@@ -596,7 +597,7 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
         ActualiseGas (DVtheta, DVthetaInt);
       }
       //
-      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+      //ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       //
       ActualiseGas (VradInt, Vrad);
       ActualiseGas (VthetaInt, Vtheta);
@@ -629,7 +630,7 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
 
       if (EnergyEquation) {
 	      // CB: March 2022: added (Frederic's advise)
-	      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+	      //ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
         ActualiseGas (EnergyInt, Energy);
 	
         /* Update thermal energy with heating, cooling source terms */
@@ -642,7 +643,7 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
         SubStep3 (Rho, Vtheta, dt);
         ActualiseGas (Energy, EnergyNew);
       }
-      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+      //ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 
       /* Update velocities, surface density and thermal energy with
       advective terms 
@@ -659,7 +660,6 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
         AddFloorDensity (Rho);
         AddFloorEnergy (Energy);
       }
-      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
 
       /* Transport and diffusion when dust is modelled as a low-pressure fluid */
       if (DustFluid) {
@@ -670,28 +670,29 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
           Diffd (DRho, Rho, DVrad, DVtheta, dt);
         if (AddFloors)
           AddFloorDensity (DRho);
-        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
       }
 
       /* Call to routine that reestablishes initial surface density on
 	    fixed timescale */
-      if (AddMass) {
+      if (AddMass)
         DampDensity(Vrad, Vtheta, Rho, Energy, dt, sys);
-        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
-      }
 
       /* Simple treatment of disc evaporation by slowly decreasing the 
 	    axisymmetric surface density profile of the gas */
-      if (DiscEvaporation) {
+      if (DiscEvaporation)
         Evaporation(Rho, dt);
-        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
-      }
 
       /* Photoevaporation via X-Ray star luminosity */
-      if (PhotoEvaporation) {
+      if (PhotoEvaporation)
         ApplyPhotoEvaporation (Vrad, Rho, dt);
-        ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
-      }
+
+      /* CB (new Nov 2025): call to boundary conditions only once at the end of timestep */
+      ApplyBoundaryCondition (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt, sys);
+
+       /* Further apply so-called Stockholm damping in wave-killing zones 
+       near the grid's inner and outer edges to avoid wave reflection */
+      if (Evanescent)
+        EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, dt);
 
       /* Update of gas temperature for output */
       ComputeTemperatureField (Rho, Energy);
@@ -1000,9 +1001,6 @@ void SubStep1 (Vrad, Vtheta, Rho, DVrad, DVtheta, DRho, sys, dt)
     UpdateVelocitiesWithViscosity (VradInt, VthetaInt, Rho, DVradInt, DVthetaInt, DRho, dt);
   }
   
-  /* Finally apply sub-Keplerian BC if requested */
-  if ( !DontApplySubKeplerian )
-    ApplySubKeplerianBoundary (VthetaInt, DVthetaInt);
 }
 
 

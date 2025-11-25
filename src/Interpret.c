@@ -21,7 +21,7 @@ static int	FirstStep = YES;
 static clock_t  First, Preceeding, Current, FirstUser, CurrentUser, PreceedingUser;
 static long	Ticks;
 boolean         FastTransport = YES, GuidingCenter = NO, BinaryCenter = NO, Indirect_Term = YES, Discard_GasIndirect_term = NO, RetrogradeBinary = NO;
-boolean         IsDisk = YES, NonReflecting = NO, Corotating = NO, OuterSourceMass = NO, Evanescent = NO, MixedBC = NO, AccBoundary = NO;
+boolean         IsDisk = YES, NonReflecting = NO, Corotating = NO, OuterSourceMass = NO, Evanescent = NO, AccBoundary = NO, WallBoundary = NO;
 boolean         Write_Density = YES, Write_Velocity = YES, Write_Energy = NO;
 boolean         Write_Temperature = NO, Write_DivV = NO, Write_Jacobi = NO, Write_DustSystem = YES;
 boolean         Write_TherDiff = NO, Write_RadDiff = NO, Write_TherCool = NO, Write_ViscHeat = NO, Write_DustDensity = NO;
@@ -165,16 +165,16 @@ void ReadVariables(filename)
   if ((*ADVLABEL == 'y') || (*ADVLABEL == 'Y')) AdvecteLabel = YES;
   if ((*OUTERSOURCEMASS == 'y') || (*OUTERSOURCEMASS == 'Y')) OuterSourceMass = YES;
   if ((*TRANSPORT == 's') || (*TRANSPORT == 'S')) FastTransport = NO;
+  if ((*OPENINNERBOUNDARY == 'W') || (*OPENINNERBOUNDARY == 'w')) WallBoundary = YES;
   if ((*OPENINNERBOUNDARY == 'O') || (*OPENINNERBOUNDARY == 'o')) OpenInner = YES;
   if ((*OPENINNERBOUNDARY == 'N') || (*OPENINNERBOUNDARY == 'n')) NonReflecting = YES;
-  if ((*OPENINNERBOUNDARY == 'E') || (*OPENINNERBOUNDARY == 'e')) Evanescent = YES;
-  if ((*OPENINNERBOUNDARY == 'M') || (*OPENINNERBOUNDARY == 'm')) MixedBC = YES;
   if ((*OPENINNERBOUNDARY == 'A') || (*OPENINNERBOUNDARY == 'a')) AccBoundary = YES;
   if ((*OPENINNERBOUNDARY == 'K') || (*OPENINNERBOUNDARY == 'k')) {
     KNOpen = YES;
     OpenInner = YES;
   }
   if ((*OPENINNERBOUNDARYDUST == 'O') || (*OPENINNERBOUNDARYDUST == 'o')) OpenInnerDust = YES;
+  if ((*WAVEKILLINGZONES == 'Y') || (*WAVEKILLINGZONES == 'y')) Evanescent = YES;
   // Boundary conditions 1D grid
   if ((*BOUNDARY1DGRID == 'Z') || (*BOUNDARY1DGRID == 'z')) {
     BC1D_SS_ZeroVel = YES;
@@ -432,11 +432,11 @@ void ReadVariables(filename)
     masterprint ("================================================\n");
     DontApplySubKeplerian = YES;
   }
-  if (Evanescent) {
-    masterprint ("Evanescent wave-killing zones boundary condition is applied,\n");
-    masterprint ("I will therefore not apply subKeplerian boundary condition on vtheta.\n");
-    DontApplySubKeplerian = YES;
-  }
+  // if (Evanescent) {
+  //   masterprint ("Evanescent wave-killing zones boundary condition is applied,\n");
+  //   masterprint ("I will therefore not apply subKeplerian boundary condition on vtheta.\n");
+  //   DontApplySubKeplerian = YES;
+  // }
   if ( (EXCLUDEHILLFACTOR < 0.0) || (EXCLUDEHILLFACTOR > 1.0) ) {
     mastererr ("EXCLUDEHILLFACTOR must range between 0 and 1.\n");
     prs_exit (1);
@@ -469,15 +469,6 @@ void ReadVariables(filename)
     mastererr ("but you did not specify the radii of the border zones. Please run again.\n");
     mastererr ("by setting the values for WKZRMIN and WKZRMAX");
     prs_exit (1);
-  }
-  if (MixedBC) {
-    WKZRMIN = 0.0;
-    if (WKZRMAX == 0.0) {
-      mastererr ("Evanescent 'wave-killing zones' assumed as the outer boundary condition, \n");
-      mastererr ("but you did not specify the radii of the border zones. Please run again.\n");
-      mastererr ("by setting the value of WKZRMAX");
-      prs_exit (1);
-    }
   }
   /* Add a trailing slash to OUTPUTDIR if needed */
   if (*(OUTPUTDIR+strlen(OUTPUTDIR)-1) != '/')
