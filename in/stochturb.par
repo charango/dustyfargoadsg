@@ -1,46 +1,50 @@
 ##################
 ### Gas parameters
 ##################                
-Sigma0          1e-4     # initial disc surface density at R=1 (code's unit of length)
-SigmaSlope      0.5      # minus the power-law radius exponent of initial disc surface density (Sigma_0 ~ R^-SigmaSlope)
-AspectRatio     0.05	 # initial disc aspect ratio (H/R) at R=1
-FlaringIndex    0.25     # power-law radius exponent of initial disc aspect ratio (H/R ~ R^FlaringIndex)
+Sigma0          3.0e-2   # initial disc surface density at R=1 (code's unit of length)
+SigmaSlope      1.5      # minus the power-law radius exponent of initial disc surface density (Sigma_0 ~ R^-SigmaSlope)
+AspectRatio     0.1      # initial disc aspect ratio (H/R) at R=1
+FlaringIndex    0.5      # power-law radius exponent of initial disc aspect ratio (H/R ~ R^FlaringIndex)
 AlphaViscosity	0.0      # uniform disc alpha viscosity
 
-SelfGravity     No       # do we include disc self-gravity? (Yes, Z or No)
-SgThicknessSmoothing 0.3 # ratio between self-gravitating softening length and pressure scale height
-AddNoise	No           # do we add initial random perturbations to gas surface density?
+SelfGravity     Yes      # do we include disc self-gravity? (Yes, Z or No)
+SgThicknessSmoothing 0.03 # ratio between self-gravitating softening length and pressure scale height
+AddNoise	    Yes      # do we add initial random perturbations to gas surface density?
 
-EnergyEquation  No	     # do we include an energy equation?
+EnergyEquation  Yes	     # do we include an energy equation?
 AdiabaticIndex  1.6667   # ratio of specific heats (gamma)
+TempPresc       Yes      # relaxation towards initial temperature profile -(T-T_0) / tau_cool
+PrescTime0      20.0     # cooling timescale for temperature relaxation: tau_cool = PrescTime0 / Omega
+BetaCooling     No              # set the cooling rate to e/tau_cool
+BetaCoolingTime  20.0    # cooling timescale for beta cooling: tau_cool = BetaCoolingTime / Omega
 
 PhotoEvaporation  No     # Disc photo-evaporation due to X-rays?
 
-FactorUnitLength 10.0	 # code's unit of length in AU
+FactorUnitLength 100.0	 # code's unit of length in AU
 FactorUnitMass	 1.0	 # code's unit of mass in Solar masses
 
 
 ##################			
 ### Disc turbulent model of Baruteau & Lin (2010)
 ##################
-MHD		        LSA	    # apply an extra 'turbulent' potential to the disc with excitation of stochastic wave-like modes (No or LSA)
-NbTurbModes  	50 	    # number of stochastic wave-like modes in turbulent potential
+MHD		        No	    # apply an extra 'turbulent' potential to the disc with excitation of stochastic wave-like modes (No or LSA)
+NbTurbModes  	50      # number of stochastic wave-like modes in turbulent potential
 LSAModeSpeedup  0.1     # 1/speedup of modes lifetime compared to LSA04
-TurbRmin  	    0.52 	# minimum orbital radius at which above turbulent potential is applied
-TurbRmax  	    1.45 	# maximum orbital radius at which above turbulent potential is applied
-GammaTurb  	    1.0e-3 	# amplitude of turbulent potential
+TurbRmin  	    0.5 	# minimum orbital radius at which above turbulent potential is applied
+TurbRmax  	    2.1 	# maximum orbital radius at which above turbulent potential is applied
+GammaTurb  	    4.0e-3 	# amplitude of turbulent potential
 HighMCutoff  	No 	    # if Yes, discard all stochastic modes with azimuthal wavenumber > 6
 
 
 ##################
 ### Star and planet parameters
 ##################
-PlanetConfig    in/template.cfg	# file contains planet parameters
+PlanetConfig    in/null.cfg	# file contains planet parameters
 ForcedCircular  No		    # do we keep planets on fixed circular orbits?
 Eccentricity	0.0     	# this is where you will change the planet's (fixed) eccentricity
-ThicknessSmoothing 0.6		# planet potential softening length to pressure scale height ratio
+RocheSmoothing  0.6		# planet potential softening length to pressure scale height ratio
 Transport       FARGO		# FARGO handling of CFL timestep (otherwise set to STANDARD)
-MassTaper	    5.0		    # timescale (in orbits at R=1) over which the masses of the planets are increased
+#MassTaper	    5.0		    # timescale (in orbits at R=1) over which the masses of the planets are increased
 
 
 ##################
@@ -48,24 +52,25 @@ MassTaper	    5.0		    # timescale (in orbits at R=1) over which the masses of t
 ##################
 Disk            Yes	        # do we include the disc?
 Rmin            0.4	        # grid's inner edge
-Rmax            2.2	        # grid's outer edge
-RadialSpacing   A  	        # A for arithmetic radial spacing or L for logarithmic radial spacing (required with gas SG)
-Nrad            200	        # number of grid cells along radial direction
-Nsec            400	        # number of grid cells along azimuthal direction
+Rmax            2.5	        # grid's outer edge
+RadialSpacing   L  	        # A for arithmetic radial spacing or L for logarithmic radial spacing (required with gas SG)
+Nrad            300	        # number of grid cells along radial direction
+Nsec            900	        # number of grid cells along azimuthal direction
 
 
 ##################
 ### Numerical parameters (incl. boundary conditions for the gas)
 ##################
-OmegaFrame      0.0	        # frame's angular frequency
-Frame           C	        # type C for a frame corotating with a planet, F for a frame fixed on the primary
+OmegaFrame      0.0         # frame's angular frequency
+Frame           F	        # type C for a frame corotating with a planet, F for a frame fixed on the primary
 IndirectTerm    Yes	        # do we include the indirect accelerations? Note the plural: due to planet and disc gas
-DiscardGasIndirectTerm	No  # do we discard the indirect term due to the gas?
-InnerBoundary   E	        # boundary condition at inner and outer edges (Open,KNOpen,Non-Reflecting,Evanescent,Accreting,Rigid)
-DampToAxi	    No	        # evanescent boundary (E): damping toward axisymmetric instantaneous fields? (default: initial fields)
-DampToViscous	No	        # new damping procedure: damping towards viscously evolving 1D profiles?
-WKZRmin		    0.52	    # outer edge of inner damping region for "evanescent" boundary (E)
-WKZRmax		    1.8	        # inner edge of outer damping region for "evanescent" boundary (E)
+DiscardGasIndirectTerm	Yes  # do we discard the indirect term due to the gas?
+InnerBoundary   Open		# boundary condition at inner and outer edges (Open,KNOpen,Non-Reflecting,Accreting,Wall)
+WaveKillingZones Yes		# use damping zones near grid's inner and outer edges? If so, default damping is toward initial fields
+DampToAxi		Yes			# damping toward axisymmetric instantaneous fields instead?
+DampToViscous	No			# damping toward viscously evolving 1D profiles instead?
+WKZRmin		    0.5	        # outer edge of inner damping region for "evanescent" boundary (E)
+WKZRmax		    2.1	        # inner edge of outer damping region for "evanescent" boundary (E)
 Nrad1D		    1000    	# number of grid cells of 1D grid where 1D viscous evolution is calculated
 Rmin1D		    0.04	    # inner edge of 1D grid
 Rmax1D		    20.0	    # outer edge of 1D grid
@@ -77,7 +82,7 @@ DensityFloor	1e-9	    # value of surface density floor in code units
 ### Outputs control parameters
 ##################
 ReadPlanetFileAtRestart	No	# to restart a run with a pre-evolved planet 
-Ntot		    400		    # NtotxDT/2Pi sets the total number of orbits (at R=1)
-Ninterm         20		    # Ninterm*DT/2pi sets the time in orbits between outputs
+Ntot		    660	    # NtotxDT/2Pi sets the total number of orbits (at R=1)
+Ninterm         2		    # Ninterm*DT/2pi sets the time in orbits between outputs
 DT		        0.314159265358	# DT
-OutputDir       out1		# Name of outputs directory (local)
+OutputDir       outb11_sgb_beta20_sq_g4em3_log_s0b_noise		# Name of outputs directory (local)

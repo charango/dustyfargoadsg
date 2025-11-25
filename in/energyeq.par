@@ -110,10 +110,11 @@ Nsec            400			# number of grid cells along azimuthal direction
 OmegaFrame      0.0			# frame's angular frequency
 Frame           C			# type C for a frame corotating with a planet, F for a frame fixed on the primary
 IndirectTerm    Yes			# do we include the indirect accelerations? Note the plural: due to planet and disc gas
-DiscardGasIndirectTerm	No  # do we discard the indirect term due to the gas?
-InnerBoundary   E			# boundary condition at inner and outer edges (Open,KNOpen,Non-Reflecting,Evanescent,Accreting,Rigid)
-DampToAxi		No			# evanescent boundary (E): damping toward axisymmetric instantaneous fields? (default: initial fields)
-DampToViscous	No			# new damping procedure: damping towards viscously evolving 1D profiles?
+DiscardGasIndirectTerm	Yes  # do we discard the indirect term due to the gas?
+InnerBoundary   Non-Reflecting		# boundary condition at inner and outer edges (Open,KNOpen,Non-Reflecting,Accreting,Wall)
+WaveKillingZones No			# use damping zones near grid's inner and outer edges? If so, default damping is toward initial fields
+DampToAxi		No			# damping toward axisymmetric instantaneous fields instead?
+DampToViscous	No			# damping toward viscously evolving 1D profiles instead?
 WKZRmin			0.52		# outer edge of inner damping region for "evanescent" boundary (E)
 WKZRmax			1.8			# inner edge of outer damping region for "evanescent" boundary (E)
 Nrad1D			1000		# number of grid cells of 1D grid where 1D viscous evolution is calculated
