@@ -10,7 +10,6 @@
 
 extern boolean WallBoundary, OpenInner, OpenInnerDust, KNOpen, NonReflecting, OuterSourceMass, Evanescent;
 extern boolean SelfGravity, SGZeroMode, EnergyEquation, AccBoundary;
-extern Pair DiskOnPrimaryAcceleration;
 real Hp0, Hg0, Ht0;
 
 real GasTotalMass (array)
@@ -40,6 +39,78 @@ real GasTotalMass (array)
   return fulltotal;
 }
 
+Pair ComputeBarycenterPosition (Density)
+      PolarGrid *Density;
+{
+  int i, j, l, ns;
+  Pair position;
+  real *dens, *abs, *ord;
+  real local_xb = 0.0, integrated_xb=0.0, local_yb = 0.0, integrated_yb=0.0; 
+  real Mdisc = 0.0;
+  ns = Density->Nsec;
+  dens = Density->Field;
+  abs = CellAbscissa->Field;
+  ord = CellOrdinate->Field;
+
+  Mdisc = GasTotalMass(Density); // here we fetch the total mass of the disc gas
+
+  if (FakeSequential && (CPU_Rank > 0)) {
+    MPI_Recv (&local_xb, 1, MPI_DOUBLE, CPU_Rank-1, 0, MPI_COMM_WORLD, &fargostat);
+    MPI_Recv (&local_yb, 1, MPI_DOUBLE, CPU_Rank-1, 0, MPI_COMM_WORLD, &fargostat);
+  }
+  for (i = Zero_or_active; i < Max_or_active; i++) {
+    for (j = 0; j < ns; j++) {
+      l = i*ns + j;
+      local_xb += Surf[i]*dens[l]*abs[l];
+      local_yb += Surf[i]*dens[l]*ord[l];
+    }
+  }
+  if (FakeSequential) {
+    if (CPU_Rank < CPU_Number-1)
+      MPI_Send (&local_xb, 1, MPI_DOUBLE, CPU_Rank+1, 0, MPI_COMM_WORLD);
+      MPI_Send (&local_yb, 1, MPI_DOUBLE, CPU_Rank+1, 0, MPI_COMM_WORLD);
+  }
+  else {
+    MPI_Allreduce (&local_xb, &integrated_xb, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce (&local_yb, &integrated_yb, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  }
+  if (FakeSequential) {
+    MPI_Bcast (&local_xb, 1, MPI_DOUBLE, CPU_Number-1, MPI_COMM_WORLD);
+    integrated_xb = local_xb;
+    MPI_Bcast (&local_yb, 1, MPI_DOUBLE, CPU_Number-1, MPI_COMM_WORLD);
+    integrated_yb = local_yb;
+  }
+
+  // x- and y-coordinates of the {star-disc} barycenter in the stellocentric frame
+  position.x = integrated_xb / (1.0+Mdisc);
+  position.y = integrated_yb / (1.0+Mdisc);
+
+  return position;
+}
+
+Pair ComputeOppositeAccelerationOfBarycenter (Density, timestep)
+      PolarGrid *Density;
+      real timestep;
+{
+  Pair vec_bary, acc_bary;
+
+  vec_bary = ComputeBarycenterPosition(Density);
+  stardiscbarycenter_x[2] = vec_bary.x; // x_b(t+dt)
+  stardiscbarycenter_y[2] = vec_bary.y; // y_b(t+dt)
+
+  // second-time derivative: d^2 r_b / dt^2 = {r_b(t+dt) - 2r_b(t) + r_b(t-dt)}/dt/dt
+  acc_bary.x = -(stardiscbarycenter_x[2] -2.0*stardiscbarycenter_x[1] + stardiscbarycenter_x[0])/(timestep*timestep);
+  acc_bary.y = -(stardiscbarycenter_y[2] -2.0*stardiscbarycenter_y[1] + stardiscbarycenter_y[0])/(timestep*timestep);
+
+  // Shuffle
+  stardiscbarycenter_x[0] = stardiscbarycenter_x[1];
+  stardiscbarycenter_x[1] = stardiscbarycenter_x[2];
+  stardiscbarycenter_y[0] = stardiscbarycenter_y[1];
+  stardiscbarycenter_y[1] = stardiscbarycenter_y[2];
+
+  return acc_bary;
+}
+
 real GasMomentum (Density, Vtheta)
      PolarGrid *Density, *Vtheta;
 {
@@ -56,9 +127,9 @@ real GasMomentum (Density, Vtheta)
       l = i*ns + j;
       /* centered-in-cell azimuthal velocity */
       if (j < ns-1)
-	vt_cent = 0.5*(vtheta[l]+vtheta[l+1]) + Rmed[i]*OmegaFrame;
+	      vt_cent = 0.5*(vtheta[l]+vtheta[l+1]) + Rmed[i]*OmegaFrame;
       else
-	vt_cent = 0.5*(vtheta[l]+vtheta[i*ns]) + Rmed[i]*OmegaFrame;
+	      vt_cent = 0.5*(vtheta[l]+vtheta[i*ns]) + Rmed[i]*OmegaFrame;
       total += Surf[i]*density[l]*Rmed[i]*vt_cent;
     }
   }
@@ -754,12 +825,12 @@ void EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step)
       /* Damping operates only inside the wave killing zones */
       if (Rmed[i] < WKZRMIN) {
         damping = (Rmed[i]-WKZRMIN)/(GlobalRmed[0]-WKZRMIN);
-        Tin = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
+        Tin = DAMPINGTIMEINLOCALPERIOD*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1 by default
         lambda = damping*damping*step/Tin;
       }
       if (Rmed[i] > WKZRMAX) {
         damping = (Rmed[i]-WKZRMAX)/(GlobalRmed[GLOBALNRAD-1]-WKZRMAX);
-        Tout = 0.3*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1
+        Tout = DAMPINGTIMEINLOCALPERIOD*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1 by default
         lambda = damping*damping*step/Tout;
       }
       /* Damping wrt initial profiles (requires DampToIni set to yes
