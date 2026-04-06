@@ -825,12 +825,12 @@ void EvanescentBoundary (Vrad, Vtheta, Rho, Energy, DVrad, DVtheta, DRho, step)
       /* Damping operates only inside the wave killing zones */
       if (Rmed[i] < WKZRMIN) {
         damping = (Rmed[i]-WKZRMIN)/(GlobalRmed[0]-WKZRMIN);
-        Tin = DAMPINGTIMEINLOCALPERIOD*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1 by default
+        Tin = DAMPINGTODYNAMICALTIMERATIO*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1 by default
         lambda = damping*damping*step/Tin;
       }
       if (Rmed[i] > WKZRMAX) {
         damping = (Rmed[i]-WKZRMAX)/(GlobalRmed[GLOBALNRAD-1]-WKZRMAX);
-        Tout = DAMPINGTIMEINLOCALPERIOD*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1 by default
+        Tout = DAMPINGTODYNAMICALTIMERATIO*pow(Rmed[i],1.5);  // 0.3 Omega_K^-1 by default
         lambda = damping*damping*step/Tout;
       }
       /* Damping wrt initial profiles (requires DampToIni set to yes
