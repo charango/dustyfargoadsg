@@ -14,7 +14,7 @@ extern real     LostMass,LostMassd,AccRate,AccRated;
 extern boolean  Corotating, ReadPlanetFileAtRestart, Write_DustDensity, Evanescent, DampToViscous;
 extern boolean  CorotateWithOuterPlanet, DiscEvaporation, Write_Jacobi, RestartWithNewDust, ComputeCPDMass;
 extern boolean  SelfGravity, SGZeroMode, EnergyEquation, SoftWriting, Write_DustSystem, DustFluid, DustFeedback;
-extern boolean  CompareSGAndSummationTorques;
+extern boolean  CompareSGAndSummationTorques, Discard_GasIndirect_term;
 real            ScalingFactor = 1.0;
 
 int
@@ -312,12 +312,12 @@ main(argc, argv)
       SolveOrbits (sys);
       UpdateLog (force, sys, gas_density, TimeStep, PhysicalTime);
       if (Stockholm == YES)
-	UpdateLogStockholm (sys, gas_density, TimeStep, PhysicalTime);
+	      UpdateLogStockholm (sys, gas_density, TimeStep, PhysicalTime);
       if (SelfGravity) {
-	// we just compute self-gravitating acceleration prior to computing SG-interpolated torque on planet
-	compute_selfgravity (gas_density, gas_v_rad, gas_v_theta, dust_v_rad, dust_v_theta, foostep, YES);
-	if (!SGZeroMode)
-	  UpdateLogSG (sys, TimeStep, PhysicalTime);
+        // we just compute self-gravitating acceleration prior to computing SG-interpolated torque on planet
+        compute_selfgravity (gas_density, gas_v_rad, gas_v_theta, dust_v_rad, dust_v_theta, foostep, YES);
+        if (!SGZeroMode)
+          UpdateLogSG (sys, TimeStep, PhysicalTime);
       }
     }
 
@@ -325,51 +325,57 @@ main(argc, argv)
     if (NINTERM * (TimeStep = (i / NINTERM)) == i) {
       TimeToWrite = YES;
 
-      /* NEW (June 2023) */
       if (CompareSGAndSummationTorques) {
-	// compute self-gravity w/o updating gas velocities
-	if (SelfGravity)
-	  compute_selfgravity (gas_density, gas_v_rad, gas_v_theta, dust_v_rad, dust_v_theta, foostep, YES);
-	CompareSGandSummationTorques (force, gas_density, sys);
+        // compute self-gravity w/o updating gas velocities
+        if (SelfGravity)
+          compute_selfgravity (gas_density, gas_v_rad, gas_v_theta, dust_v_rad, dust_v_theta, foostep, YES);
+        CompareSGandSummationTorques (force, gas_density, sys);
       }
       
+      // Mar 2026: new method to compute disc's indirect term via barycentre position
+      if (!Discard_GasIndirect_term) {
+        WriteBarycentrePosition (gas_density);
+        CompareIndirectTerm ();
+      }
+
       SendOutput (TimeStep, gas_density, gas_v_rad, gas_v_theta, gas_energy, gas_label, dust_pc_density, dust_density, dust_v_rad, dust_v_theta, dustsys);
       WritePlanetSystemFile (sys, TimeStep);
       if (Evanescent && DampToViscous)
-	Write1DViscProfiles (TimeStep);
+	      Write1DViscProfiles (TimeStep);
+
       if (NBPART != 0) {
-	if (Write_DustSystem)
-	  WriteDustSystemFile (dustsys, TimeStep);
-	if (Write_Jacobi) {
-	  for(j=0; j<NBPART; j++)
-	    WriteJacobi(dustsys,sys,j);
-	}
+        if (Write_DustSystem)
+          WriteDustSystemFile (dustsys, TimeStep);
+        if (Write_Jacobi) {
+          for(j=0; j<NBPART; j++)
+            WriteJacobi(dustsys,sys,j);
+	      }
       }
       
       /* If SoftWriting true, tqwk* files and bigplanet*.dat files are
-	 written every NINTERM timesteps */
+	    written every NINTERM timesteps */
       if (SoftWriting) {
-	WriteBigPlanetSystemFile (sys, TimeStep);
-	SolveOrbits (sys);
-	UpdateLog (force, sys, gas_density, TimeStep, PhysicalTime);
-	if (Stockholm == YES)
-	  UpdateLogStockholm (sys, gas_density, TimeStep, PhysicalTime);
-	if (SelfGravity) {
-	  // we just compute self-gravitating acceleration prior to computing SG-interpolated torque on planet
-	  compute_selfgravity (gas_density, gas_v_rad, gas_v_theta, dust_v_rad, dust_v_theta, foostep, YES);
-	  if (!SGZeroMode)
-	    UpdateLogSG (sys, TimeStep, PhysicalTime);
-	}
+        WriteBigPlanetSystemFile (sys, TimeStep);
+        SolveOrbits (sys);
+        UpdateLog (force, sys, gas_density, TimeStep, PhysicalTime);
+        if (Stockholm == YES)
+          UpdateLogStockholm (sys, gas_density, TimeStep, PhysicalTime);
+        if (SelfGravity) {
+          // we just compute self-gravitating acceleration prior to computing SG-interpolated torque on planet
+          compute_selfgravity (gas_density, gas_v_rad, gas_v_theta, dust_v_rad, dust_v_theta, foostep, YES);
+          if (!SGZeroMode)
+            UpdateLogSG (sys, TimeStep, PhysicalTime);
+        }
       }
       
       if ((OnlyInit) || ((GotoNextOutput) && (!StillWriteOneOutput))) {
-	MPI_Finalize();
-	return 0;
+        MPI_Finalize();
+        return 0;
       }
       
       StillWriteOneOutput--;
       if (TimeInfo == YES)	/* Time monitoring is done here */
-	GiveTimeInfo (TimeStep);
+	      GiveTimeInfo (TimeStep);
       
     }
     else {

@@ -201,3 +201,7 @@ real myrandn_rad ();
 real myrandn_phi ();
 void ComputeResidualDensity ();
 void CompareSGandSummationTorques ();
+Pair ComputeBarycenterPosition ();
+Pair ComputeOppositeAccelerationOfBarycenter ();
+void WriteBarycentrePosition ();
+void CompareIndirectTerm ();

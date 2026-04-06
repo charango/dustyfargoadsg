@@ -12,7 +12,6 @@ conditions.
 #include "mp.h"
 
 extern boolean OpenInner, NonReflecting;
-extern Pair DiskOnPrimaryAcceleration;
 
 Force ComputeForceStockholm (Rho, x, y, rsmoothing, mass)
      PolarGrid *Rho;

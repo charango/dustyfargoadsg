@@ -35,7 +35,7 @@ extern boolean DustDiffusion;
 extern boolean FastTransport, IsDisk, AddFloors, DustFluid, DustFeedback, DustFeelDisk, DampToViscous, ShortFrictionTimeApproximation;
 extern boolean AddMass, DiscEvaporation, PhotoEvaporation, CavityTorque;
 
-Pair DiskOnPrimaryAcceleration;
+Pair DiskOnPrimaryAcceleration, DiskOnPrimaryAcceleration_alt;
 
 int FirstGasStepFLAG=1;
 static int AlreadyCrashed = 0, GasTimeStepsCFL;
@@ -471,13 +471,18 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
 
     DiskOnPrimaryAcceleration.x = 0.0;
     DiskOnPrimaryAcceleration.y = 0.0;
+    DiskOnPrimaryAcceleration_alt.x = 0.0;
+    DiskOnPrimaryAcceleration_alt.y = 0.0;
     if (Corotating == YES) GetPsysInfo (sys, MARK);
 
     if (IsDisk == YES) {
       /* Indirect term of star potential */
       //DiskOnPrimaryAcceleration   = ComputeAccel (force, Rho, 0.0, 0.0, 0.0, 0.0, sys);
       // CB: new nov 2025 (Sergei's proposition)
-      DiskOnPrimaryAcceleration   = ComputeAccel (force, Rho, 0.0, 0.0, INDIRECTTERMSMOOTHING, 0.0, sys);
+      DiskOnPrimaryAcceleration = ComputeAccel (force, Rho, 0.0, 0.0, INDIRECTTERMSMOOTHING, 0.0, sys);
+      /* Alternative way to compute disc's indirect term as 
+      the second derivative of the star-barycentre vector position */
+      DiskOnPrimaryAcceleration_alt = ComputeOppositeAccelerationOfBarycenter (Rho, dt);
       /* Gravitational potential from star and planet(s) */
       FillForcesArrays (sys);
       /* Planets' velocities are updated with gravitationnal

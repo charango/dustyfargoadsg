@@ -430,3 +430,57 @@ void WriteJacobi(dsys, Plsys,  num)
   fclose (output);
   fflush(stdout);
 }
+
+
+void WriteBarycentrePosition (Density)
+      PolarGrid *Density;
+{
+  Pair vec_bary;
+  real xb, yb, rb;
+
+  FILE *output;
+  char name[256];
+
+  // ALL CPUS go through this
+  vec_bary = ComputeBarycenterPosition(Density);
+  xb = vec_bary.x;
+  yb = vec_bary.y;
+  rb = sqrt( xb*xb + yb*yb );
+
+  if (!CPU_Master) return;
+  printf ("Updating 'barycenter.dat'...");
+  fflush (stdout);
+  sprintf (name, "%sbarycenter.dat", OUTPUTDIR);
+  output = fopen (name, "a");
+  if (output == NULL) {
+    fprintf (stderr, "Can't write 'sbarycenter.dat' file. Aborting.\n");
+    prs_exit (1);
+  }
+  fprintf (output, "%#.14g\t%#.14g\t%#.14g\t%#.14g\n", PhysicalTime, xb, yb, rb);
+  fclose (output);
+  printf ("done\n");
+  fflush (stdout);
+}
+
+
+void CompareIndirectTerm ()
+{
+  extern Pair DiskOnPrimaryAcceleration, DiskOnPrimaryAcceleration_alt;
+
+  FILE *output;
+  char name[256];
+
+  if (!CPU_Master) return;
+  printf ("Updating 'compindirectterm.dat'...");
+  fflush (stdout);
+  sprintf (name, "%scompindirectterm.dat", OUTPUTDIR);
+  output = fopen (name, "a");
+  if (output == NULL) {
+    fprintf (stderr, "Can't write 'compindirectterm.dat' file. Aborting.\n");
+    prs_exit (1);
+  }
+  fprintf (output, "%#.14g\t%#.14g\t%#.14g\t%#.14g\t%#.14g\n", PhysicalTime, DiskOnPrimaryAcceleration.x, DiskOnPrimaryAcceleration.y, DiskOnPrimaryAcceleration_alt.x, DiskOnPrimaryAcceleration_alt.y);
+  fclose (output);
+  printf ("done\n");
+  fflush (stdout);
+}

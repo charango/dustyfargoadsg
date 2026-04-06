@@ -63,4 +63,4 @@ real *GLOBAL_Axidens_Evap;
 real VthetaMed[MAX1D], VradMed[MAX1D];
 real DVthetaMed[MAX1D], DVradMed[MAX1D];
 real Minimum_Stopping_Time;
-
+real stardiscbarycenter_x[3], stardiscbarycenter_y[3];
