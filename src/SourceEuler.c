@@ -1161,10 +1161,22 @@ void SubStep3 (Rho, Vtheta, dt)
 	    implicite. */
       if (TempPresc) {
         for (i = 0; i < nr; i++) {
+          if (VISCOSITY == 0.0)
+            coolingtime = PrescTimeMed[i];
+          else {
+            omega = 0.0;
+            for (j = 0; j < ns; j++) {
+              l = j+i*ns;
+              omega += (vtheta[l] + Rmed[i]*OmegaFrame);
+            }
+            omega /= (real)ns;
+            omega /= Rmed[i];
+            coolingtime = PRESCTIME0/omega;
+          }
           for (j = 0; j < ns; j++) {
             l = j+i*ns;
-            num = energynew[l] + EnergyMed[i]*(dens[l]/SigmaMed[i])*(dt/PrescTimeMed[i]);
-            den = 1.0+dt/PrescTimeMed[i]; 
+            num = energynew[l] + EnergyMed[i]*(dens[l]/SigmaMed[i])*(dt/coolingtime);
+            den = 1.0+dt/coolingtime; 
             energynew[l] = num/den;
           }
         }
@@ -1181,10 +1193,10 @@ void SubStep3 (Rho, Vtheta, dt)
           omega /= (real)ns;
           omega /= Rmed[i];
           beta  = ComputeBetaCooling(Rmed[i]);
+          coolingtime = beta / omega;
           for (j = 0; j < ns; j++) {
             l = j+i*ns;
             num = energynew[l];
-            coolingtime = beta / omega;
             den = 1.0+dt/coolingtime; 
             energynew[l] = num/den;
           }
