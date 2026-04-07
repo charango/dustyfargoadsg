@@ -1161,16 +1161,10 @@ void SubStep3 (Rho, Vtheta, dt)
 	    implicite. */
       if (TempPresc) {
         for (i = 0; i < nr; i++) {
-          if (VISCOSITY == 0.0)
+          if (VISCOSITY > 0.0)
             coolingtime = PrescTimeMed[i];
           else {
-            omega = 0.0;
-            for (j = 0; j < ns; j++) {
-              l = j+i*ns;
-              omega += (vtheta[l] + Rmed[i]*OmegaFrame);
-            }
-            omega /= (real)ns;
-            omega /= Rmed[i];
+            omega = pow(Rmed[i],-1.5);
             coolingtime = PRESCTIME0/omega;
           }
           for (j = 0; j < ns; j++) {
