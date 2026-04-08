@@ -51,8 +51,9 @@ real Sigma(r)
     sigmabg *= exp(-pow(r/1.0,-1.5));
   }
   if (TailOffGI) {
-    /* July 2022 */
-    sigmabg *= exp(-pow(r/3.3,8.0))*exp(-pow(r/1.6,-1.1)); // use SIGMA0 = 1.0e-1, SIGMASLOPE = 2.5
+    /* April 2026 */
+    sigmabg *= exp(-pow(r/3.5,3.0))*exp(-pow(r/1.6,-1.1)); // use SIGMA0 = 0.2, SIGMASLOPE = 2.5
+    // sigmabg *= exp(-pow(r/3.3,8.0))*exp(-pow(r/1.6,-1.1)); // use SIGMA0 = 1.0e-1, SIGMASLOPE = 2.5
   }
   if (CavityTorque) {
     /* June 2022 (Guillaume Robert's internship) */

@@ -326,7 +326,7 @@ void InitGasDensity (Rho)
           dens[l] += 1e-2*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
         }
         if (AddM2) {
-          dens[l] += 1e-2*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(2.0*Azimuth[j]);
+          dens[l] += 1e-3*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(2.0*Azimuth[j]);
         }
         if (AddM1toM10) {
           for (k=0; k<10; k++) {
@@ -522,9 +522,9 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
 				pow(r,2.0*FLARINGINDEX)*		\
 				(1.+SIGMASLOPE-2.0*FLARINGINDEX) );
       if (TailOffGI) {
-        //sigmabg *= exp(-pow(r/3.3,8.0))*exp(-pow(r/1.6,-1.1)); // use SIGMA0 = 1.0e-1, SIGMASLOPE = 2.5
-        a = 8.0;
-        r1 = 3.3;
+        //sigmabg *= exp(-pow(r/3.5,3.0))*exp(-pow(r/1.6,-1.1)); // use SIGMA0 = 0.2, SIGMASLOPE = 2.5
+        a = 3.0;
+        r1 = 3.5;
         b = -1.1;        
         r2 = 1.6;
         myvtheta = omega*r*sqrt(1.0-pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX) *\
