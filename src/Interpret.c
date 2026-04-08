@@ -20,7 +20,7 @@ static int      VariableIndex = 0;
 static int	FirstStep = YES;
 static clock_t  First, Preceeding, Current, FirstUser, CurrentUser, PreceedingUser;
 static long	Ticks;
-boolean         FastTransport = YES, GuidingCenter = NO, BinaryCenter = NO, Indirect_Term = YES, Discard_GasIndirect_term = NO, RetrogradeBinary = NO;
+boolean         FastTransport = YES, GuidingCenter = NO, BinaryCenter = NO, Indirect_Term = YES, Discard_GasIndirect_term = NO, Alternative_Gas_Indirect_Term = NO, RetrogradeBinary = NO;
 boolean         IsDisk = YES, NonReflecting = NO, Corotating = NO, OuterSourceMass = NO, Evanescent = NO, AccBoundary = NO, WallBoundary = NO;
 boolean         Write_Density = YES, Write_Velocity = YES, Write_Energy = NO;
 boolean         Write_Temperature = NO, Write_DivV = NO, Write_Jacobi = NO, Write_DustSystem = YES;
@@ -40,7 +40,7 @@ boolean         NGPInterpolation = NO, CICInterpolation = NO, TSCInterpolation =
 boolean         DampToIni = NO, DampToAxi = YES, DampToViscous = NO;
 boolean         CorotateWithOuterPlanet = NO;
 boolean         DiscEvaporation = NO, ShortFrictionTimeApproximation = YES;
-boolean         CustomizedIT = NO, AddFloors = YES, AddM1 = NO, AddM1Boosted = NO, AddM1toM10 = NO, TailOffGauss = NO, ExponentialCutoff = NO;
+boolean         CustomizedIT = NO, AddFloors = YES, AddM1 = NO, AddM2 = NO, AddM1Boosted = NO, AddM1toM10 = NO, TailOffGauss = NO, ExponentialCutoff = NO;
 boolean         DustFeelDisk = YES, DustFeelSG = YES, DustFeelSGZeroMode = NO, DustFeelPlanets = YES, RestartWithNewDust = NO, DustFeelTurb = NO, TailOffIn = NO, TailOffAurelien = NO, TailOffStype = NO, TailOffGI = NO, TailOffSareh = NO, DustGrowth = NO;
 boolean         ZZIntegrator = NO, NoTimestepConstraintByParticles = NO, PhotoEvaporation = NO, DecInner = NO, DustFeedback = NO, RemoveDustFromPlanetsHillRadius = YES;
 boolean         DustFluid = NO, DustDiffusion = NO, Write_StokesNumber = NO;
@@ -290,6 +290,9 @@ void ReadVariables(filename)
   if ((*ADDM1 == 'y') || (*ADDM1 == 'Y')) {
     AddM1 = YES;
   }
+  if ((*ADDM2 == 'y') || (*ADDM2 == 'Y')) {
+    AddM2 = YES;
+  }
   if ((*ADDM1 == 'b') || (*ADDM1 == 'B')) {
     AddM1Boosted = YES;
   }
@@ -356,6 +359,7 @@ void ReadVariables(filename)
   if ((*COROTATEWITHOUTERPLANET == 'y') || (*COROTATEWITHOUTERPLANET == 'Y')) CorotateWithOuterPlanet = YES;
   if ((*INDIRECTTERM == 'N') || (*INDIRECTTERM == 'n')) Indirect_Term = NO;
   if ((*DISCARDGASINDIRECTTERM == 'Y') || (*DISCARDGASINDIRECTTERM == 'y')) Discard_GasIndirect_term = YES;
+  if ((*ALTERNATIVEGASINDIRECTTERM == 'Y') || (*ALTERNATIVEGASINDIRECTTERM == 'y')) Alternative_Gas_Indirect_Term = YES;
   if ((*SELFGRAVITY == 'Y') || (*SELFGRAVITY == 'y')) SelfGravity = YES;
   if ((*SELFGRAVITY == 'Z') || (*SELFGRAVITY == 'z')) {
     SelfGravity = YES;

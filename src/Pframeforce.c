@@ -17,8 +17,8 @@ hydrodynamics fields with analytic prescription.
 
 #include "mp.h"
 
-extern boolean AllowAccretion, Indirect_Term, Discard_GasIndirect_term, DustFluid, DustFeedback;
-extern Pair DiskOnPrimaryAcceleration;
+extern boolean AllowAccretion, Indirect_Term, Discard_GasIndirect_term, Alternative_Gas_Indirect_Term, DustFluid, DustFeedback;
+extern Pair DiskOnPrimaryAcceleration, DiskOnPrimaryAcceleration_alt;
 static Pair IndirectTerm;
 static real q0[MAX1D], q1[MAX1D], PlanetMasses[MAX1D];
 static real vt_int[MAX1D], vt_cent[MAX1D];
@@ -26,6 +26,15 @@ static real vt_int[MAX1D], vt_cent[MAX1D];
 void ComputeIndirectTerm () {
   IndirectTerm.x = -DiskOnPrimaryAcceleration.x;
   IndirectTerm.y = -DiskOnPrimaryAcceleration.y; 
+
+ /* March 2026: testing alternative method to compute indirect term: we 
+ say that the star's acceleration is the opposite of the acceleration 
+ of the {star-disc} barycenter */
+  if (Alternative_Gas_Indirect_Term) {
+    IndirectTerm.x = -DiskOnPrimaryAcceleration_alt.x;
+    IndirectTerm.y = -DiskOnPrimaryAcceleration_alt.y; 
+  }
+
   if (Indirect_Term == NO) {
     IndirectTerm.x = 0.0;
     IndirectTerm.y = 0.0;
@@ -291,7 +300,7 @@ void InitGasDensity (Rho)
 {
   int i, j, l, nr, ns, k;
   real *dens, randomnb;
-  extern boolean ImposedDensity, AddNoise, AddM1, AddM1Boosted, AddM1toM10;
+  extern boolean ImposedDensity, AddNoise, AddM1, AddM2, AddM1Boosted, AddM1toM10;
   dens = Rho->Field;
   nr = Rho->Nrad;
   ns = Rho->Nsec;
@@ -314,7 +323,10 @@ void InitGasDensity (Rho)
           dens[l] += 1e-3*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
         }
         if (AddM1Boosted) {
-          dens[l] += 1e-1*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
+          dens[l] += 1e-2*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(Azimuth[j]);
+        }
+        if (AddM2) {
+          dens[l] += 1e-2*SigmaMed[i]*sin(M_PI*(Rmed[i]-GlobalRmed[0])/(GlobalRmed[GLOBALNRAD-1]-GlobalRmed[0]))*cos(2.0*Azimuth[j]);
         }
         if (AddM1toM10) {
           for (k=0; k<10; k++) {
@@ -435,12 +447,13 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
   extern boolean SelfGravity;
   extern boolean CavityTorque;
   extern boolean TailOffSareh;
+  extern boolean TailOffGI;
   int i, j, l, nr, ns;
   real *vr, *vt, *pres, *cs;
   real *rho, *drho, *St;
   real vk, eta, eps;
   real  r, omega, ri, rii, Hi, myvtheta, vt2;
-  real viscosity, t1, t2, r1, r2;
+  real viscosity, t1, t2, r1, r2, a, b;
   real num, den;
   real vr_over_cs;
   vr  = Vr->Field;
@@ -508,6 +521,15 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
       myvtheta   = omega*r*sqrt(1.0-pow(ASPECTRATIO,2.0)*		\
 				pow(r,2.0*FLARINGINDEX)*		\
 				(1.+SIGMASLOPE-2.0*FLARINGINDEX) );
+      if (TailOffGI) {
+        //sigmabg *= exp(-pow(r/3.3,8.0))*exp(-pow(r/1.6,-1.1)); // use SIGMA0 = 1.0e-1, SIGMASLOPE = 2.5
+        a = 8.0;
+        r1 = 3.3;
+        b = -1.1;        
+        r2 = 1.6;
+        myvtheta = omega*r*sqrt(1.0-pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX) *\
+        (1.+SIGMASLOPE-2.0*FLARINGINDEX+a*pow(r/r1,a)+b*pow(r/r2,b)) );
+      }
       for (j = 0; j < ns; j++) {
         l = j+i*ns;
         vt[l] = myvtheta;
