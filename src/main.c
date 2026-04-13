@@ -194,34 +194,32 @@ main(argc, argv)
       Initial_Disc_Dust_Mass = 0.0;
       // below we compute the total dust disc mass between RMINDUST and RMAXDUST
       for (i=0; i<GLOBALNRAD; i++) {
-	if ( (Radii[i] >= RMINDUST) && (Radii[i] <= RMAXDUST) )
-	  Initial_Disc_Dust_Mass += (GLOBAL_bufarray[i]*0.5*(PMAX-PMIN)*(Radii[i+1]*Radii[i+1]-Radii[i]*Radii[i]));
+        if ( (Radii[i] >= RMINDUST) && (Radii[i] <= RMAXDUST) )
+          Initial_Disc_Dust_Mass += (GLOBAL_bufarray[i]*0.5*(PMAX-PMIN)*(Radii[i+1]*Radii[i+1]-Radii[i]*Radii[i]));
       }
       Particles_Mass_Initial = Initial_Disc_Dust_Mass/NBPART;
       Particles_Mass = Particles_Mass_Initial;
       // Keep track of disc's initial mass in a file for a restart run
       if (CPU_Master) {
-	sprintf (name_idm, "%s%s.dat", OUTPUTDIR, "particlesmass");
-	fich_idm = fopen(name_idm, "w");
-	if (fich_idm == NULL) {
-	  fprintf (stderr, "Can't write 'particlesmass.dat' file. Aborting.\n");
-	  prs_exit (1);
-	}
-	fprintf (fich_idm, "%lg",Particles_Mass);
-	fclose (fich_idm);
+        sprintf (name_idm, "%s%s.dat", OUTPUTDIR, "particlesmass");
+        fich_idm = fopen(name_idm, "w");
+        if (fich_idm == NULL) {
+          fprintf (stderr, "Can't write 'particlesmass.dat' file. Aborting.\n");
+          prs_exit (1);
+        }
+        fprintf (fich_idm, "%lg",Particles_Mass);
+        fclose (fich_idm);
       }
     } else {
-      if (DustFeedback) {
-	// Case of a restart simulation with already evolved dust particles
-	sprintf (name_idm, "%s%s.dat", OUTPUTDIR, "particlesmass");
-	fich_idm = fopen(name_idm, "r");
-	if (fich_idm == NULL) {
-	  fprintf (stderr, "Can't read 'particlesmass.dat' file. Aborting.\n");
-	  prs_exit (1);
-	}
-	fscanf (fich_idm, "%lg",&Particles_Mass);
-	Particles_Mass_Initial = Particles_Mass;
+      // Case of a restart simulation with already evolved dust particles
+      sprintf (name_idm, "%s%s.dat", OUTPUTDIR, "particlesmass");
+      fich_idm = fopen(name_idm, "r");
+      if (fich_idm == NULL) {
+        fprintf (stderr, "Can't read 'particlesmass.dat' file. Aborting.\n");
+        prs_exit (1);
       }
+      fscanf (fich_idm, "%lg",&Particles_Mass);
+      Particles_Mass_Initial = Particles_Mass;
     }
     masterprint ("Mass of the super-particles is %lg\n",Particles_Mass);
   }

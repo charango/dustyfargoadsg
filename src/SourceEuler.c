@@ -525,7 +525,7 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
     RotatePsys (sys, OmegaFrame*dt);
     if (NBPART != 0) {
       RotateDsys (dsys, OmegaFrame*dt);
-      /* CB 02/2024 needed to later damp pcdensX.dat files */
+      /* CB 02/2024 needed to later dump pcdensX.dat files */
       if (Write_DustDensity == YES)
 	      interpolation(dsys, Vrad, Vtheta, Rho, dustpcdens, dt);
     }
