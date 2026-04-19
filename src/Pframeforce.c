@@ -16,7 +16,6 @@ hydrodynamics fields with analytic prescription.
 */
 
 #include "mp.h"
-
 extern boolean AllowAccretion, Indirect_Term, Discard_GasIndirect_term, Alternative_Gas_Indirect_Term, DustFluid, DustFeedback;
 extern Pair DiskOnPrimaryAcceleration, DiskOnPrimaryAcceleration_alt;
 static Pair IndirectTerm;
@@ -447,7 +446,7 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
   extern boolean SelfGravity;
   extern boolean CavityTorque;
   extern boolean TailOffSareh;
-  extern boolean TailOffGI;
+  extern boolean TailOffGI, ExponentialCutoff;
   int i, j, l, nr, ns;
   real *vr, *vt, *pres, *cs;
   real *rho, *drho, *St;
@@ -529,6 +528,10 @@ void InitGasVelocities (Vr, Vt, Rho, DRho)
         r2 = 1.6;
         myvtheta = omega*r*sqrt(1.0-pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX) *\
         (1.+SIGMASLOPE-2.0*FLARINGINDEX+a*pow(r/r1,a)+b*pow(r/r2,b)) );
+      }
+      if (ExponentialCutoff) {
+        myvtheta = omega*r*sqrt(1.0-pow(ASPECTRATIO,2.0)*pow(r,2.0*FLARINGINDEX) *\
+        (1.+SIGMASLOPE+(r*FACTORUNITLENGTH/CUTDIST)-2.0*FLARINGINDEX) );
       }
       for (j = 0; j < ns; j++) {
         l = j+i*ns;
