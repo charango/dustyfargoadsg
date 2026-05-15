@@ -282,12 +282,6 @@ void InitEuler (Vr, Vt, Rho, Energy, DVr, DVt, DRho, sys)
     ComputeEntropyDiffusion (Rho, Energy);
   if (EnergyEquation && RadiativeDiffusion && !ImplicitRadiativeDiffusion)
       ComputeRadiativeDiffusion (Rho, Energy);
-  // CB (Dec 2017): function ComputeThermalCooling is no longer 
-  // used (see substep 3, an implicit solver is used there)
-  /*
-  if (EnergyEquation && ThermalCooling)
-    ComputeThermalCooling (Rho, Energy);
-  */
 }
 
 real min2 (a,b)
@@ -644,6 +638,10 @@ void AlgoGas (force, Rho, Vrad, Vtheta, Energy, Label, DRho, dustpcdens, DVrad, 
           ComputeViscousHeating (Rho);
         }
         
+        /* Update opcities before calling substep 3 */
+        if (ThermalCooling)
+          ComputeOpacities (Rho, Energy);
+
         /* call to substep 3*/
         SubStep3 (Rho, Vtheta, dt);
         ActualiseGas (Energy, EnergyNew);
@@ -1322,7 +1320,7 @@ int ConditionCFL (Vrad, Vtheta, DVrad, DVtheta, Rho, Energy, deltaT)
   real *soundspeed, *dsoundspeed, *temperature, *dens, *opacity;
   extern boolean Evanescent, DampToViscous;
 
-  if (EnergyEquation && RadiativeDiffusion && !ImplicitRadiativeDiffusion)
+  if (EnergyEquation && ThermalCooling)
      ComputeOpacities (Rho, Energy);
 
   opacity = Opacity->Field;
